@@ -1,0 +1,29 @@
+#!/bin/bash
+
+oc adm inspect  ns/open-cluster-management --all-namespaces --dest-dir=must-gather
+oc adm inspect  ns/hive --all-namespaces --dest-dir=must-gather
+oc adm inspect  multiclusterhubs.operators.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+
+oc adm inspect endpointconfigs.multicloud.ibm.com --all-namespaces --dest-dir=must-gather
+oc adm inspect  hiveconfigs.hive.openshift.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  applications.app.k8s.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  channels.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  deployables.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  placementrules.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  subscriptions.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  policies.policy.mcm.ibm.com --all-namespaces --dest-dir=must-gather
+oc adm inspect  PlacementBinding.mcm.ibm --all-namespaces --dest-dir=must-gather
+oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces --dest-dir=must-gather
+oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces --dest-dir=must-gather
+oc adm inspect machinesets.machine.openshift.io --all-namespaces --dest-dir=must-gather
+
+oc adm inspect  spokeviews.view.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  clusteractions.action.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  manifestworks.work.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  spokeclusters.cluster.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  clusterinfos.internal.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  hubcores.nucleus.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+oc adm inspect  spokecores.nucleus.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+
+
+exit 0
