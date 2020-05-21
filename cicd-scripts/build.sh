@@ -3,5 +3,5 @@ echo "BUILD GOES HERE!"
 
 echo "<repo>/<component>:<tag> : $1"
 
-docker build .
+make docker/build
 
