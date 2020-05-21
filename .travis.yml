@@ -43,8 +43,8 @@ stages:
   # - release-ff
   # - publish
 
-before_script:
-  - make init
+# before_script:
+#  - make init
 
 jobs:
   include:
