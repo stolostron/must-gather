@@ -4,7 +4,7 @@ This is experimental right now. Following commands will be run under the covers:
 - 
 - oc adm inspect  ns/open-cluster-management
 - oc adm inspect  ns/hive 
-oc adm inspect  multiclusterhubs.operators.open-cluster-management.io --all-namespaces
+- oc adm inspect  multiclusterhubs.operators.open-cluster-management.io --all-namespaces
 - oc adm inspect endpointconfigs.multicloud.ibm.com --all-namespaces
 - oc adm inspect  hiveconfigs.hive.openshift.io --all-namespaces 
 - oc adm inspect  applications.app.k8s.io --all-namespaces 
