@@ -37,10 +37,9 @@ env:
 
 stages:
   - build
-  # TODO: Won't do these yet, because we aren't ready to integrate with ACM.
-  # - unit-test
-  # - test-e2e
-  # - release-ff
+  - unit-test
+  - test-e2e
+  - release-ff
   # - publish
 
 before_script:
@@ -77,13 +76,13 @@ jobs:
         - make component/test/e2e
         - make security/scans
 
-    # TODO: Won't release-ff yet, because we aren't ready to integrate with ACM.
-    # - stage: release-ff
-    #   name: "Push commits to current release branch"
-    #   if: type = push AND branch =~ /^master$/
-    #   script:
-    #     - make
-    #     - make release-ff
+    
+    - stage: release-ff
+      name: "Push commits to current release branch"
+      if: type = push AND branch =~ /^master$/
+      script:
+        - make
+        - make release-ff
   
     # TODO: Won't publish yet, because we aren't ready to integrate with ACM.
     # - stage: publish
