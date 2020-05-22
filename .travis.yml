@@ -55,6 +55,7 @@ jobs:
         # - make copyright-check
         - make component/build
         - make component/push
+        - make security/scans
     - stage: unit-test
       name: "Run unit tests"
       script:
