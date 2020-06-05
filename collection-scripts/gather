@@ -1,29 +1,79 @@
 #!/bin/bash
+set -x
 
-oc adm inspect  ns/open-cluster-management --all-namespaces --dest-dir=must-gather
-oc adm inspect  ns/hive --all-namespaces --dest-dir=must-gather
-oc adm inspect  multiclusterhubs.operators.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+#BASE_COLLECTION_PATH="/must-gather"
+#mkdir -p ${BASE_COLLECTION_PATH}
 
-oc adm inspect endpointconfigs.multicloud.ibm.com --all-namespaces --dest-dir=must-gather
-oc adm inspect  hiveconfigs.hive.openshift.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  applications.app.k8s.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  channels.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  deployables.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  placementrules.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  subscriptions.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  policies.policy.mcm.ibm.com --all-namespaces --dest-dir=must-gather
-oc adm inspect  PlacementBinding.mcm.ibm --all-namespaces --dest-dir=must-gather
-oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces --dest-dir=must-gather
-oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces --dest-dir=must-gather
-oc adm inspect machinesets.machine.openshift.io --all-namespaces --dest-dir=must-gather
+CLUSTER="SPOKE"
+NAMESPACE=""
 
-oc adm inspect  spokeviews.view.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  clusteractions.action.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  manifestworks.work.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  spokeclusters.cluster.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  clusterinfos.internal.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  hubcores.nucleus.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect  spokecores.nucleus.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+#check_spokes() {
+#    echo "The list of spoke clusters that need attention" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
+#}
+
+check_if_hub () {
+    NAMESPACE=`oc get multiclusterhubs.operators.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }'`
+    echo "$NAMESPACE"
+     #if [[ "$NAMESPACE" != error* ]];
+     #   then CLUSTER="HUB"
+     #fi  
+     if [[ -z "$NAMESPACE" ]] ;
+        then CLUSTER="SPOKE"
+     else  CLUSTER="HUB"
+     fi 
+}
+
+
+check_if_hub
+
+echo "$CLUSTER"
+
+case "$CLUSTER" in 
+    #case 1 
+    "HUB")
+
+    #check_spokes
+    #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
+    oc adm inspect  ns/"$NAMESPACE"  --dest-dir=must-gather
+    oc adm inspect  ns/hive  --dest-dir=must-gather
+    oc adm inspect  multiclusterhubs.operators.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect endpointconfigs.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
+    oc adm inspect hiveconfigs.hive.openshift.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect applications.app.k8s.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect channels.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect deployables.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect policies.policy.mcm.ibm.com --all-namespaces  --dest-dir=must-gather
+    oc adm inspect PlacementBinding.mcm.ibm --all-namespaces  --dest-dir=must-gather
+    oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect machinesets.machine.openshift.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect  spokeviews.view.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  clusteractions.action.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  manifestworks.work.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  spokeclusters.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  clusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  hubcores.nucleus.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  spokecores.nucleus.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    ;;
+
+      
+    #case 2 
+    "SPOKE") 
+    oc adm inspect ns/multicluster-endpoint --dest-dir=must-gather
+    oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
+    oc adm inspect workmanagers.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
+
+    
+    ;; 
+      
+   
+esac 
+
 
 
 exit 0
