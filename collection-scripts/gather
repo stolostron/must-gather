@@ -1,15 +1,16 @@
 #!/bin/bash
-set -x
+#set -x
 
-#BASE_COLLECTION_PATH="/must-gather"
-#mkdir -p ${BASE_COLLECTION_PATH}
+BASE_COLLECTION_PATH="/must-gather"
+mkdir -p ${BASE_COLLECTION_PATH}
 
 CLUSTER="SPOKE"
 NAMESPACE=""
 
-#check_spokes() {
-#    echo "The list of spoke clusters that need attention" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
-#}
+check_spokes() {
+    echo "The list of spoke clusters that on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
+    oc get clusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-spoke.log 
+}
 
 check_if_hub () {
     NAMESPACE=`oc get multiclusterhubs.operators.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }'`
@@ -32,7 +33,7 @@ case "$CLUSTER" in
     #case 1 
     "HUB")
 
-    #check_spokes
+    check_spokes
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
     oc adm inspect  ns/"$NAMESPACE"  --dest-dir=must-gather
     oc adm inspect  ns/hive  --dest-dir=must-gather
