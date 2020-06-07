@@ -8,7 +8,7 @@ CLUSTER="SPOKE"
 NAMESPACE=""
 
 check_spokes() {
-    echo "The list of spoke clusters that on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
+    echo "The list of spoke clusters that are configured on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
     oc get clusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-spoke.log 
 }
 
