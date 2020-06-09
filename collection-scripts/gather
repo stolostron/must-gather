@@ -52,19 +52,19 @@ case "$CLUSTER" in
     oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect machinesets.machine.openshift.io --all-namespaces  --dest-dir=must-gather
 
-    oc adm inspect  spokeviews.view.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  clusteractions.action.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  managedclusterviews.view.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  managedclusteractions.action.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  manifestworks.work.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  spokeclusters.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  clusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  hubcores.nucleus.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  spokecores.nucleus.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  managedclusters.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  managedclusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  clustermanagers.nucleus.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
     ;;
 
       
     #case 2 
-    "SPOKE") 
+    "SPOKE")
+    oc adm inspect  klusterlet.nucleus.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect ns/multicluster-endpoint --dest-dir=must-gather
     oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
     oc adm inspect workmanagers.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
