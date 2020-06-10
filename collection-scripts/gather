@@ -44,6 +44,7 @@ case "$CLUSTER" in
     oc adm inspect applications.app.k8s.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect channels.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect deployables.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policies.policy.mcm.ibm.com --all-namespaces  --dest-dir=must-gather
