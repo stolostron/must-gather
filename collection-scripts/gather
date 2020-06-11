@@ -5,20 +5,32 @@ BASE_COLLECTION_PATH="/must-gather"
 mkdir -p ${BASE_COLLECTION_PATH}
 
 CLUSTER="SPOKE"
-NAMESPACE=""
+HUBNAMESPACE=""
+MCNAMESPACE=""
 
 check_spokes() {
     echo "The list of spoke clusters that are configured on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
+    #These calls will change with new API
     oc get clusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-spoke.log 
+    
+    #to capture details in the manahed cluster namespace to debug hive issues
+    #refer https://github.com/open-cluster-management/backlog/issues/2682
+    MCNAMESPACE=`oc get clusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.namespace"`
+    for mcns in ${MCNAMESPACE[@]};
+    do
+        #oc kubectl get pods -n "$mcns" >> ${BASE_COLLECTION_PATH}/gather-spoke.log 
+        oc adm inspect  ns/"$mcns"  --dest-dir=must-gather
+    done
+
 }
 
 check_if_hub () {
-    NAMESPACE=`oc get multiclusterhubs.operators.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }'`
-    echo "$NAMESPACE"
+    HUBNAMESPACE=`oc get multiclusterhubs.operators.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }'`
+    echo "$HUBNAMESPACE"
      #if [[ "$NAMESPACE" != error* ]];
      #   then CLUSTER="HUB"
      #fi  
-     if [[ -z "$NAMESPACE" ]] ;
+     if [[ -z "$HUBNAMESPACE" ]] ;
         then CLUSTER="SPOKE"
      else  CLUSTER="HUB"
      fi 
@@ -35,7 +47,8 @@ case "$CLUSTER" in
 
     check_spokes
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
-    oc adm inspect  ns/"$NAMESPACE"  --dest-dir=must-gather
+    oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log 
+    oc adm inspect  ns/"$HUBNAMESPACE"  --dest-dir=must-gather
     oc adm inspect  ns/hive  --dest-dir=must-gather
     oc adm inspect  multiclusterhubs.operators.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
