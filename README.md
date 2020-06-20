@@ -24,11 +24,9 @@ oc adm must-gather
 2. If run on the ACM Hub Server, it will also capture a list of Spoke Clusters configured and the status. This is found in the `gather-spoke.log` If a Spoke Cluster reports a status of not equal to Ready when it is expected to be, then the must-gather command above should be run on the Spoke Cluster as well.
 
 ### Data collected
-<br/>
-<br/>
-<img src="images/must-gather-image.PNG" alt="MustGatherDirLayout" width="2000" >
-<br/>
-<br/>
+
+![Must Gather Layout](images/must-gather-image.png)
+
 
 Let us go through what is collected:
 1. The data is organized under 2 levels - cluster scoped resources and the resources that belong to namespaces (that we have decided to collect)
@@ -41,11 +39,8 @@ Let us go through what is collected:
 8. This is the list of Pods running in each namespace. If a namespace does not contain any pods, this will be not be there.
 
 Data collected for the PODs include:
-<br/>
-<br/>
-<img src="images/pod-data.PNG" alt="PodData" width="2000" >
-<br/>
-<br/>
+![POD Data collected](images/pod-data.png)
+
 If we take a look at the cluster-manager POD for example you will see the yaml file which contains detailed output of the POD. You can see the container called registration-operator and its logs.
 
 ### If run on ACM Hub, it collects (is being updated soon to match New APIs):
