@@ -80,6 +80,8 @@ case "$CLUSTER" in
     oc adm inspect  managedclusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  clustermanagers.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
+    oc adm inspect  klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
     ;;
 
       
