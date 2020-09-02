@@ -20,8 +20,8 @@ oc adm must-gather
 ```
 
 ## Information Captured
-1. The above must-gather command can understand where it is being run - ACM Hub Server or Managed (Spoke) Cluster and collects data accordingly.
-2. If run on the ACM Hub Server, it will also capture a list of Spoke Clusters configured and the status. This is found in the `gather-spoke.log` If a Spoke Cluster reports a status of not equal to Ready when it is expected to be, then the must-gather command above should be run on the Spoke Cluster as well.
+1. The above must-gather command can understand where it is being run - ACM Hub Server or Managed Cluster and collects data accordingly.
+2. If run on the ACM Hub Server, it will also capture a list of Managed Clusters configured and the status. This is found in the `gather-managed.log` If a Managed Cluster reports a status of not equal to Ready when it is expected to be, then the must-gather command above should be run on the Managed Cluster as well.
 
 ### Data collected
 
@@ -34,7 +34,7 @@ Let us go through what is collected:
 3. And we can see the Kind for the custom resource defintions.
 4. At the leaf level, we can see the `yaml for each of the custom resources for the kind`
 5. This log contains the output of `kubectl get pods -n $NAMESPACE-IN-WHICH-ACM-RUNS-ON-HUB`.
-6. If run on the ACM Hub Server, the list of Spoke Clusters configured and their status is captured in this log.
+6. If run on the ACM Hub Server, the list of Managed Clusters configured and their status is captured in this log.
 7. The list of namespace for each the data is collected. And the output of one namespace is expanded. The other namespaces when expanded will look the same. 
 8. This is the list of Pods running in each namespace. If a namespace does not contain any pods, this will be not be there.
 
