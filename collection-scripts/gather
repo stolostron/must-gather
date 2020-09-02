@@ -11,16 +11,29 @@ MCNAMESPACE=""
 check_spokes() {
     echo "The list of spoke clusters that are configured on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
     #These calls will change with new API
-    oc get managedclusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-spoke.log 
-    
-    #to capture details in the manahed cluster namespace to debug hive issues
+    oc get managedclusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-spoke.log
+
+    #to capture details in the managed cluster namespace to debug hive issues
     #refer https://github.com/open-cluster-management/backlog/issues/2682
     MCNAMESPACE=`oc get managedclusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.name"`
     for mcns in ${MCNAMESPACE[@]};
     do
-        #oc kubectl get pods -n "$mcns" >> ${BASE_COLLECTION_PATH}/gather-spoke.log 
+        #oc kubectl get pods -n "$mcns" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
         oc adm inspect  ns/"$mcns"  --dest-dir=must-gather
+
     done
+
+    echo "Gathering data for managed clusters that failed deployment..."
+    # find any failed add cluster and grab the latest provision pod log for debug
+    CLUSTERDEPLOYMENTS=`oc get clusterdeployments --all-namespaces | grep false | cut -d ' ' -f1`
+    for clusterd in ${CLUSTERDEPLOYMENTS[@]};
+    do
+      echo "   managed cluster: ${clusterd}"
+      # get name of last pod to try provisioning
+      PODNAME=`oc get pods -n "$clusterd" --no-headers | tail -1 | cut -d ' ' -f1`
+      mkdir -p ${BASE_COLLECTION_PATH}/FailedManagedClusters/${clusterd}
+      oc logs -n "$clusterd" "$PODNAME" -c hive >${BASE_COLLECTION_PATH}/FailedManagedClusters/${clusterd}/${PODNAME}.log
+     done
 
 }
 
@@ -29,11 +42,11 @@ check_if_hub () {
     echo "$HUBNAMESPACE"
      #if [[ "$NAMESPACE" != error* ]];
      #   then CLUSTER="HUB"
-     #fi  
+     #fi
      if [[ -z "$HUBNAMESPACE" ]] ;
         then CLUSTER="SPOKE"
      else  CLUSTER="HUB"
-     fi 
+     fi
 }
 
 
@@ -41,13 +54,13 @@ check_if_hub
 
 echo "$CLUSTER"
 
-case "$CLUSTER" in 
-    #case 1 
+case "$CLUSTER" in
+    #case 1
     "HUB")
 
     check_spokes
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
-    oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log 
+    oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log
     oc adm inspect  ns/"$HUBNAMESPACE"  --dest-dir=must-gather
     oc adm inspect  ns/"$HUBNAMESPACE"-hub  --dest-dir=must-gather
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
@@ -86,8 +99,8 @@ case "$CLUSTER" in
 
     ;;
 
-      
-    #case 2 
+
+    #case 2
     "SPOKE")
     oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-agent --dest-dir=must-gather
@@ -99,18 +112,18 @@ case "$CLUSTER" in
     oc adm inspect iampolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect searchcollectors.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    
+
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect cispolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
 
-    
-    ;; 
-      
-   
-esac 
+
+    ;;
+
+
+esac
 
 
 
