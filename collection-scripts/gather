@@ -8,12 +8,12 @@ CLUSTER="SPOKE"
 HUBNAMESPACE=""
 MCNAMESPACE=""
 
-check_spokes() {
-    echo "The list of spoke clusters that are configured on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-spoke.log
+check_managed_clusters() {
+    echo "The list of managed clusters that are configured on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-managed.log
     #These calls will change with new API
     oc get managedclusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-managed.log
     
-    #to capture details in the manahed cluster namespace to debug hive issues
+    #to capture details in the managed cluster namespace to debug hive issues
     #refer https://github.com/open-cluster-management/backlog/issues/2682
     MCNAMESPACE=`oc get managedclusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.name"`
     for mcns in ${MCNAMESPACE[@]};
@@ -45,7 +45,7 @@ case "$CLUSTER" in
     #case 1 
     "HUB")
 
-    check_spokes
+    check_managed_clusters
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
     oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log 
     oc adm inspect  ns/"$HUBNAMESPACE"  --dest-dir=must-gather
