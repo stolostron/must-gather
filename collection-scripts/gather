@@ -73,9 +73,6 @@ case "$CLUSTER" in
     oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect machinesets.machine.openshift.io --all-namespaces  --dest-dir=must-gather
 
-    oc adm inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather 
-    oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather 
-
     oc adm inspect  managedclusterviews.view.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  managedclusteractions.action.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  manifestworks.work.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -86,6 +83,10 @@ case "$CLUSTER" in
     oc adm inspect  issuers.certmanager.k8s.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect  klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
 
     ;;
 
