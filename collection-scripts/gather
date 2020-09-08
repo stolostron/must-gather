@@ -109,7 +109,7 @@ case "$CLUSTER" in
     oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect cispolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
-
+    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
     
     ;; 
       
