@@ -88,6 +88,7 @@ case "$CLUSTER" in
     oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect managedclusteraddons.addon.open-cluster-management.io  --all-namespaces  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
+    oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
 
     ;;
 
