@@ -90,6 +90,10 @@ case "$CLUSTER" in
     oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
 
+    oc adm inspect  discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  discoveredclusters.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
     ;;
 
       
