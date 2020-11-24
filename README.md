@@ -73,6 +73,7 @@ If we take a look at the cluster-manager POD for example you will see the yaml f
 - discoveredclusterrefreshes.discovery.open-cluster-management.io
 - discoveredclusters.discovery.open-cluster-management.io
 - discoveryconfigs.discovery.open-cluster-management.io
+- searchoperators.search.open-cluster-management.io
 
 ### If run on Managed Cluster, it collects (is being updated soon to match New APIs):
 
