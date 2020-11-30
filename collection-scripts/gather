@@ -93,6 +93,8 @@ case "$CLUSTER" in
     oc adm inspect  discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  discoveredclusters.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect searchoperators.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
 
     ;;
 
