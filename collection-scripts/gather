@@ -102,6 +102,7 @@ case "$CLUSTER" in
     #case 2 
     "SPOKE")
     oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-agent --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-agent-addon --dest-dir=must-gather
     #oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
