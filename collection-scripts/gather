@@ -121,7 +121,8 @@ case "$CLUSTER" in
 
     oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
     
-    oc adm inspect ns/gatekeeper-system --dest-dir=must-gather
+    oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
+    oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
     ;; 
       
    
