@@ -36,6 +36,29 @@ check_if_hub () {
      fi 
 }
 
+gather_spoke () {
+    oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect ns/open-cluster-management-agent --dest-dir=must-gather
+    oc adm inspect ns/open-cluster-management-agent-addon --dest-dir=must-gather
+    #oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
+    oc adm inspect workmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect applicationmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect certpolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect iampolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect policycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect searchcollectors.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    
+    oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect cispolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
+    
+    oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
+    oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
+}
 
 check_if_hub
 
@@ -87,8 +110,8 @@ case "$CLUSTER" in
     oc adm inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect managedclusteraddons.addon.open-cluster-management.io  --all-namespaces  --dest-dir=must-gather
-    oc adm inspect observatoria.core.observatorium.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
+    oc adm inspect observatoria.core.observatorium.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
 
     oc adm inspect  discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -96,33 +119,15 @@ case "$CLUSTER" in
     oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect searchoperators.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect searchcustomizations.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
+    
+    # gather hub imported as managed
+    gather_spoke
     ;;
 
       
     #case 2 
     "SPOKE")
-    oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-agent --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-agent-addon --dest-dir=must-gather
-    #oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
-    oc adm inspect workmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect applicationmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect certpolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect iampolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect policycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect searchcollectors.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    
-    oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect cispolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
-    
-    oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
-    oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
+    gather_spoke
     ;; 
       
    
