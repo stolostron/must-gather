@@ -58,6 +58,8 @@ gather_spoke () {
     
     oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
     oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
+
+    oc adm inspect ns/openshift-monitoring --dest-dir=must-gather
 }
 
 check_if_hub
