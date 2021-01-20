@@ -119,6 +119,8 @@ case "$CLUSTER" in
     oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect searchoperators.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect searchcustomizations.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
     
     # gather hub imported as managed
     gather_spoke
