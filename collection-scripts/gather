@@ -121,6 +121,11 @@ case "$CLUSTER" in
     oc adm inspect searchcustomizations.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
+
+    oc adm inspect node --dest-dir=must-gather
+
+    oc adm node-logs --tail=10000 --role master -u kubelet > ${BASE_COLLECTION_PATH}/gather-master-kubelet.log
+    oc adm node-logs --tail=10000 --role worker -u kubelet > ${BASE_COLLECTION_PATH}/gather-worker-kubelet.log
     
     # gather hub imported as managed
     gather_spoke
