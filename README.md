@@ -1,6 +1,4 @@
-# Must Gather Script for Open Cluster Management
-
-This is experimental as of now.   
+# Must Gather Script for Open Cluster Management 
 
 ## Usage
 
