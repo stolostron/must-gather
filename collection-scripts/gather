@@ -111,8 +111,6 @@ case "$CLUSTER" in
     oc adm inspect  managedclusters.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  managedclusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  clustermanagers.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  certificates.certmanager.k8s.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  issuers.certmanager.k8s.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect  klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
