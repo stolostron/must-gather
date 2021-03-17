@@ -101,6 +101,7 @@ case "$CLUSTER" in
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect placementbindings.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect syncsets.hive.openshift.io --all-namespaces --dest-dir=must-gather
     oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect machinesets.machine.openshift.io --all-namespaces  --dest-dir=must-gather
 
@@ -114,6 +115,9 @@ case "$CLUSTER" in
     oc adm inspect  issuers.certmanager.k8s.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect  klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
 
     oc adm inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
