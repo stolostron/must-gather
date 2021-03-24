@@ -3,4 +3,5 @@
 -include /opt/build-harness/Makefile.prow
 
 unit-test:
-    echo "Running unit tests. (TODO)"
+	@echo "Running unit tests. (TODO)"
+
