@@ -1,5 +1,5 @@
 # Must Gather Script for Open Cluster Management 
-The must gather script for Open Cluster Management allows a user to collect information about various key resources and namespaces that exist on your cluster. 
+The must gather script for Open Cluster Management allows a user to collect information about various key resources and namespaces that exist on your cluster.
 
 ## Usage
 
