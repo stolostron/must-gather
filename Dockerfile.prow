@@ -2,7 +2,6 @@
 # Copyright Contributors to the Open Cluster Management project
 
 FROM registry.ci.openshift.org/ocp/4.7:cli AS builder
-COPY . .
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
