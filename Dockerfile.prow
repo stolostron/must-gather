@@ -2,13 +2,9 @@
 # Copyright Contributors to the Open Cluster Management project
 
 FROM registry.ci.openshift.org/ocp/4.7:cli AS builder
-# COPY . .
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3
 
-RUN microdnf update &&\
-    microdnf install ca-certificates vi --nodocs &&\
-    microdnf clean all
 
 # Copy oc binary
 COPY --from=builder /usr/bin/oc /usr/bin/oc
