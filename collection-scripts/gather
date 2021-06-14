@@ -81,7 +81,7 @@ case "$CLUSTER" in
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
     oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log 
     oc adm inspect  ns/"$HUBNAMESPACE"  --dest-dir=must-gather
-    oc adm inspect  ns/"$HUBNAMESPACE"-hub  --dest-dir=must-gather
+    oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
     oc get proxy -o yaml > ${BASE_COLLECTION_PATH}/gather-proxy.log
     oc adm inspect  ns/hive  --dest-dir=must-gather
