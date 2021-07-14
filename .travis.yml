@@ -67,7 +67,7 @@ jobs:
         - make
         - make component/pull 
         - make component/test/unit
-        # - make sonar/go   # TODO: Need to onboard to SonarCloud
+
     - stage: test-e2e
       name: "Deploy the image to a cluster and run e2e tests"
       if: type = pull_request
@@ -78,14 +78,6 @@ jobs:
         - make component/pull 
         - make component/test/e2e
         - make security/scans
-
-    
-    - stage: release-ff
-      name: "Push commits to current release branch"
-      if: type = push AND branch =~ /^main$/
-      script:
-        - make
-        - make release-ff
   
     - stage: publish
       name: "Publish the image to quay with an official version/sha tag and publish entry to integration pipeline stage"
