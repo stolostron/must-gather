@@ -98,6 +98,8 @@ case "$CLUSTER" in
     oc adm inspect channels.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect deployables.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
