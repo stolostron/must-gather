@@ -79,7 +79,8 @@ case "$CLUSTER" in
 
     check_managed_clusters
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
-    oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log 
+    oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log
+    oc get csv -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log 
     oc adm inspect  ns/"$HUBNAMESPACE"  --dest-dir=must-gather
     oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
@@ -97,9 +98,12 @@ case "$CLUSTER" in
     oc adm inspect channels.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect deployables.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect placementbindings.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect syncsets.hive.openshift.io --all-namespaces --dest-dir=must-gather
