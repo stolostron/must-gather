@@ -1,5 +1,11 @@
 # Must Gather Script for Open Cluster Management 
-The must gather script for Open Cluster Management allows a user to collect information about various key resources and namespaces that exist on your cluster.
+The must gather script for Open Cluster Management allows a user to collect information about various key resources and namespaces that exist on your cluster. We leverage the built-in `oc adm gather` command. The gather command is built in with the openshift cli. It gathers information about a resource. See "information gathered" below. The code for the command is definied within the oc repository of the Openshift Org. [oc](https://github.com/openshift/oc/) See the files associated speicifically with the gather command here: [must-gather](https://github.com/openshift/oc/tree/master/pkg/cli/admin/mustgather) 
+
+[oc](https://github.com/openshift/oc/)
+command comes with the https://github.com/openshift/oc/
+
+https://github.com/openshift/release/
+
 
 ## Usage
 
@@ -41,5 +47,3 @@ Data collected for the PODs include:
 ![POD Data collected](images/pod-data.png)
 
 If we take a look at the cluster-manager POD for example you will see the yaml file which contains detailed output of the POD. You can see the container called registration-operator and its logs.
-
-#2021-07-12
