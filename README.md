@@ -43,3 +43,5 @@ Data collected for the PODs include:
 If we take a look at the cluster-manager POD for example you will see the yaml file which contains detailed output of the POD. You can see the container called registration-operator and its logs.
 
 #2021-07-12
+
+Rebuild: 2021-09-22
