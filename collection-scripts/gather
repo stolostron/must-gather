@@ -15,7 +15,8 @@ check_managed_clusters() {
     echo "The list of managed clusters that are configured on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-managed.log
     #These calls will change with new API
     oc get managedclusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-managed.log
-    
+    oc version >> ${BASE_COLLECTION_PATH}/gather-managed.log
+ 
     #to capture details in the managed cluster namespace to debug hive issues
     #refer https://github.com/open-cluster-management/backlog/issues/2682
     MCNAMESPACE=`oc get managedclusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.name"`
@@ -80,7 +81,8 @@ case "$CLUSTER" in
     check_managed_clusters
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
     oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log
-    oc get csv -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log 
+    oc get csv -n "$HUBNAMESPACE" >> ${BASE_COLLECTION_PATH}/gather-acm.log
+    oc version >> ${BASE_COLLECTION_PATH}/gather-acm.log
     oc adm inspect  ns/"$HUBNAMESPACE"  --dest-dir=must-gather
     oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
