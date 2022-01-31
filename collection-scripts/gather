@@ -105,6 +105,7 @@ case "$CLUSTER" in
     oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect placementbindings.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces  --dest-dir=must-gather
