@@ -68,7 +68,7 @@ gather_spoke () {
     oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
     oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper operator will be installed in this ns in production
     oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
-} 
+}
 
 check_if_hub
 
