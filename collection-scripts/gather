@@ -69,12 +69,6 @@ gather_spoke () {
     oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper operator will be installed in this ns in production
     oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
 
-    oc adm inspect restores.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect backupschedules.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect backupstoragelocations.velero.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect backups.velero.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect restores.velero.io --all-namespaces  --dest-dir=must-gather
-
 check_if_hub
 
 echo "$CLUSTER"
@@ -146,6 +140,13 @@ case "$CLUSTER" in
 
     oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-issuer  --dest-dir=must-gather
+
+    oc adm inspect restores.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect backupschedules.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect backupstoragelocations.velero.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect backups.velero.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect restores.velero.io --all-namespaces  --dest-dir=must-gather
+
     
     # gather hub imported as managed
     gather_spoke
