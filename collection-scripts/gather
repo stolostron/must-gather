@@ -148,6 +148,7 @@ case "$CLUSTER" in
     oc adm inspect backups.velero.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect restores.velero.io --all-namespaces  --dest-dir=must-gather
 
+    oc adm inspect ansiblejobs.tower.ansible.com --all-namespaces  --dest-dir=must-gather
     
     # gather hub imported as managed
     gather_spoke
