@@ -6,7 +6,6 @@ FROM registry.ci.openshift.org/ocp/4.7:cli AS builder
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
 RUN microdnf update -y \
-    && microdnf install -y tar rsync findutils gzip iproute util-linux \
     && microdnf clean all
 
 # Copy oc binary
