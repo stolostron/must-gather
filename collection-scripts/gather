@@ -62,12 +62,12 @@ collect_dr_logs() {
     oc get managedclusteraddons --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/managedclusteraddons_all_namespaces
     oc adm --dest-dir=must-gather inspect managedclusteraddons --all-namespaces
 
-    MANAGEDCLUSTERS=`oc get managedcluster --no-headers=true | awk '{ print $1 }'`
-    for managedcluster in ${MANAGEDCLUSTERS[@]}; do
-        oc get manifestwork -n ${managedcluster} >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_${managedcluster}
-        oc describe manifestwork -n ${managedcluster} >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_${managedcluster}
-        oc get managedclusterview -n ${managedcluster} >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_${managedcluster}
-        oc describe managedclusterview -n ${managedcluster} >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_managedclusterview_${managedcluster}
+    MANAGEDCLUSTERS=$(oc get managedcluster --no-headers=true | awk '{ print $1 }')
+    for managedcluster in $MANAGEDCLUSTERS; do
+        oc get manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_"${managedcluster}"
+        oc describe manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_"${managedcluster}"
+        oc get managedclusterview -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_"${managedcluster}"
+        oc describe managedclusterview -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_managedclusterview_"${managedcluster}"
     done
 }
 
