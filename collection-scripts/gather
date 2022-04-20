@@ -108,8 +108,12 @@ gather_spoke () {
     oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
 
+    # VolSync CRs
+    oc adm inspect replicationdestinations.volsync.backube --all-namespaces --dest-dir=must-gather
+    oc adm inspect replicationsources.volsync.backube --all-namespaces --dest-dir=must-gather
+
     oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
-    oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper operator will be installed in this ns in production
+    oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper and volsync operator will be installed in this ns in production
     oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
 }
 
