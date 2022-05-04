@@ -4,13 +4,13 @@ The must gather script for Open Cluster Management allows a user to collect info
 ## Usage
 
 ```sh
-oc adm must-gather --image=quay.io/open-cluster-management/must-gather:0.1.0-SNAPSHOT-2020-06-....
+oc adm must-gather --image=quay.io/stolostron/must-gather:SNAPSHOTNAME
 ```
 
 If you need the results to be saved in a named directory, then following the must-gather instructions, this can be run. Also added are commands to create a gzipped tarball:
 
 ```sh
-oc adm must-gather --image=quay.io/open-cluster-management/must-gather:0.1.0-SNAPSHOT-2020-06-.... --dest-dir=SOMENAME ; tar -cvzf SOMENAME.tgz SOMENAME
+oc adm must-gather --image=quay.io/stolostron/must-gather:SNAPSHOTNAME --dest-dir=SOMENAME ; tar -cvzf SOMENAME.tgz SOMENAME
 ```
 
 In addition, if we need to collect must-gather for the OpenShift infrastructure, we can run:
