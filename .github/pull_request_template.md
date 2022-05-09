@@ -1,11 +1,10 @@
-**Related Issue:**  open-cluster-management/backlog#<ISSUE_NUMBER>
+**Related Issue:**  stolostron/backlog#<ISSUE_NUMBER>
 
 **Description of Changes:**
 
 **What resource is being added**: <resource name> | N/A
 
-**Is this a Hub or Managed cluster change?:** 
+**Is this a Hub or Managed cluster change?:**
 Hub Cluster | Managed Cluster | N/A
 
 **Notes:**
-
