@@ -46,6 +46,13 @@ collect_dr_logs() {
     COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_drpolicy
     oc describe drpolicy >> ${COMMAND_OUTPUT_FILE}
     oc adm --dest-dir=must-gather inspect drpolicy
+    # Collect logs for oc get DRCluster
+    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_drcluster
+    oc get DRCluster >> ${COMMAND_OUTPUT_FILE}
+    # Collect logs for oc describe DRCluster
+    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_drcluster
+    oc describe DRCluster >> ${COMMAND_OUTPUT_FILE}
+    oc adm --dest-dir=must-gather inspect DRCluster
     # For Channels of all namespaces
     oc get channel --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/channel_all_namespace
     oc adm --dest-dir=must-gather inspect channel --all-namespaces
