@@ -115,6 +115,9 @@ gather_spoke () {
     oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
     oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper and volsync operator will be installed in this ns in production
     oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
+
+    # Submariner logs
+    oc adm inspect ns/submariner-operator --dest-dir=must-gather
 }
 
 check_if_hub
@@ -204,6 +207,10 @@ case "$CLUSTER" in
     oc adm inspect clusterImageSet.hive.openshift.io --all-namespaces --dest-dir=must-gather
     oc adm inspect agentclusterinstall.extensions.hive.openshift.io --all-namespaces --dest-dir=must-gather
     oc adm inspect baremetalhost.metal3.io --all-namespaces --dest-dir=must-gather
+
+    # Submariner Addon CRs
+    oc adm inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect brokers.submariner.io --all-namespaces --dest-dir=must-gather
 
     # gather hub imported as managed
     gather_spoke
