@@ -138,6 +138,13 @@ case "$CLUSTER" in
 
     oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-issuer  --dest-dir=must-gather
+
+    # Inspect Assisted-installer CRs
+    oc adm inspect infraenv.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect clusterImageSet.hive.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect agentclusterinstall.extensions.hive.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect baremetalhost.metal3.io --all-namespaces --dest-dir=must-gather
+
     
     # gather hub imported as managed
     gather_spoke
