@@ -1,4 +1,5 @@
-# Must Gather Script for Open Cluster Management 
+# Must Gather Script for Open Cluster Management
+
 The must gather script for Open Cluster Management allows a user to collect information about various key resources and namespaces that exist on your cluster.
 
 ## Usage
@@ -14,11 +15,13 @@ oc adm must-gather --image=quay.io/stolostron/must-gather:SNAPSHOTNAME --dest-di
 ```
 
 In addition, if we need to collect must-gather for the OpenShift infrastructure, we can run:
-```
+
+```bash
 oc adm must-gather
 ```
 
 ## Information Captured
+
 1. The above must-gather command can understand where it is being run - Open Cluster Mangement Hub Server or Managed Cluster and collects data accordingly.
 2. If run on the Open Cluster Management Hub Server, it will also capture a list of Managed Clusters configured and the status. This is found in the `gather-managed.log` If a Managed Cluster reports a status of not equal to Ready when it is expected to be, then the must-gather command above should be run on the Managed Cluster as well.
 
@@ -26,15 +29,15 @@ oc adm must-gather
 
 ![Must Gather Layout](images/must-gather-image.png)
 
-
 Let us go through what is collected:
+
 1. The data is organized under 2 levels - cluster scoped resources and the resources that belong to namespaces (that we have decided to collect)
 2. The data is further organized by API group for the custom resource definitions. This is true for both cluster scope and namespace scoped resources.
 3. And we can see the Kind for the custom resource defintions.
 4. At the leaf level, we can see the `yaml for each of the custom resources for the kind`
 5. This log contains the output of `kubectl get pods -n $NAMESPACE-IN-WHICH-OCM-RUNS-ON-HUB`.
 6. If run on the Open-Cluster-Management Hub Server, the list of Managed Clusters configured and their status is captured in this log.
-7. The list of namespace for each the data is collected. And the output of one namespace is expanded. The other namespaces when expanded will look the same. 
+7. The list of namespace for each the data is collected. And the output of one namespace is expanded. The other namespaces when expanded will look the same.
 8. This is the list of Pods running in each namespace. If a namespace does not contain any pods, this will be not be there.
 
 Data collected for the PODs include:
@@ -42,4 +45,4 @@ Data collected for the PODs include:
 
 If we take a look at the cluster-manager POD for example you will see the yaml file which contains detailed output of the POD. You can see the container called registration-operator and its logs.
 
-Rebuild Date: 2022-05-09
+Rebuild Date: Wed Aug 17 12:41:42 EDT 2022
