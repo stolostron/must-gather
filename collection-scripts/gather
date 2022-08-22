@@ -92,8 +92,10 @@ check_if_hub () {
 
 gather_spoke () {
 
+    # application resources on managed cluster
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect subscriptionstatus.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
