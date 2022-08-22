@@ -155,6 +155,7 @@ case "$CLUSTER" in
     oc adm inspect baremetalassets.inventory.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect baremetalhosts.metal3.io --all-namespaces  --dest-dir=must-gather
 
+    # application resources
     oc adm inspect applications.app.k8s.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect channels.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect deployables.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -163,6 +164,8 @@ case "$CLUSTER" in
     oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect subscriptionreport.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+    
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
