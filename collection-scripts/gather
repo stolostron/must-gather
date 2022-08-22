@@ -96,7 +96,6 @@ gather_spoke () {
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptionstatus.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect applications.argoproj.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -168,8 +167,6 @@ case "$CLUSTER" in
     oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptionreports.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect applicationsets.argoproj.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect applications.argoproj.io --all-namespaces  --dest-dir=must-gather
     
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
