@@ -127,6 +127,9 @@ gather_spoke () {
 
     # Submariner logs
     oc adm inspect ns/submariner-operator --dest-dir=must-gather
+
+    # Version info
+    oc adm --dest-dir=must-gather inspect clusterversions
 }
 
 check_if_hub
@@ -223,6 +226,10 @@ case "$CLUSTER" in
     # Submariner Addon CRs
     oc adm inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
     oc adm inspect brokers.submariner.io --all-namespaces --dest-dir=must-gather
+
+    # version information
+    oc adm --dest-dir=must-gather inspect clusterversions
+    oc adm --dest-dir=must-gather inspect csv -n "$HUBNAMESPACE"
 
     # gather hub imported as managed
     gather_spoke
