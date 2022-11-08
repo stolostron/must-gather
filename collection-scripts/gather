@@ -16,7 +16,7 @@ check_managed_clusters() {
     #These calls will change with new API
     oc get managedclusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-managed.log
     oc version >> ${BASE_COLLECTION_PATH}/gather-managed.log
- 
+
     #to capture details in the managed cluster namespace to debug hive issues
     #refer https://github.com/open-cluster-management/backlog/issues/2682
     MCNAMESPACE=`oc get managedclusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.name"`
@@ -83,11 +83,11 @@ check_if_hub () {
     echo "$HUBNAMESPACE"
      #if [[ "$NAMESPACE" != error* ]];
      #   then CLUSTER="HUB"
-     #fi  
+     #fi
      if [[ -z "$HUBNAMESPACE" ]] ;
         then CLUSTER="SPOKE"
      else  CLUSTER="HUB"
-     fi 
+     fi
 }
 
 gather_spoke () {
@@ -108,12 +108,12 @@ gather_spoke () {
     oc adm inspect iampolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect searchcollectors.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    
+
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect configurationpolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    
+
     oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
 
@@ -136,8 +136,8 @@ check_if_hub
 
 echo "$CLUSTER"
 
-case "$CLUSTER" in 
-    #case 1 
+case "$CLUSTER" in
+    #case 1
     "HUB")
 
     check_managed_clusters
@@ -157,7 +157,6 @@ case "$CLUSTER" in
     #oc adm inspect endpointconfigs.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
     oc adm inspect hiveconfigs.hive.openshift.io --all-namespaces  --dest-dir=must-gather
 
-    oc adm inspect baremetalassets.inventory.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect baremetalhosts.metal3.io --all-namespaces  --dest-dir=must-gather
 
     # application resources
@@ -170,7 +169,7 @@ case "$CLUSTER" in
     oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptionreports.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-    
+
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -216,7 +215,7 @@ case "$CLUSTER" in
     oc adm inspect restores.velero.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect ansiblejobs.tower.ansible.com --all-namespaces  --dest-dir=must-gather
-    
+
     # Inspect Assisted-installer CRs
     oc adm inspect infraenv.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
     oc adm inspect clusterImageSet.hive.openshift.io --all-namespaces --dest-dir=must-gather
@@ -235,14 +234,14 @@ case "$CLUSTER" in
     gather_spoke
     ;;
 
-      
-    #case 2 
+
+    #case 2
     "SPOKE")
     gather_spoke
-    ;; 
-      
-   
-esac 
+    ;;
+
+
+esac
 
 
 
