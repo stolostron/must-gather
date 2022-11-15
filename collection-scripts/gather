@@ -231,6 +231,9 @@ case "$CLUSTER" in
     oc adm --dest-dir=must-gather inspect clusterversions
     oc adm --dest-dir=must-gather inspect csv -n "$HUBNAMESPACE"
 
+    # OpenShift console plug-in enablement
+    oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
+
     # gather hub imported as managed
     gather_spoke
     ;;
