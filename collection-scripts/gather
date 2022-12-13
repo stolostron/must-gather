@@ -7,20 +7,22 @@
 BASE_COLLECTION_PATH="/must-gather"
 mkdir -p ${BASE_COLLECTION_PATH}
 
-CLUSTER="SPOKE"
-HUBNAMESPACE=""
-MCNAMESPACE=""
+HUB_CLUSTER=false
+SPOKE_CLUSTER=false
+HUB_NAMESPACE=""
 
 check_managed_clusters() {
-    echo "The list of managed clusters that are configured on this Hub:" >> ${BASE_COLLECTION_PATH}/gather-managed.log
-    #These calls will change with new API
-    oc get managedclusters --all-namespaces >> ${BASE_COLLECTION_PATH}/gather-managed.log
-    oc version >> ${BASE_COLLECTION_PATH}/gather-managed.log
+    {
+      echo "The list of managed clusters that are configured on this Hub:"
+      #These calls will change with new API
+      oc get managedclusters --all-namespaces
+      oc version
+    } >> ${BASE_COLLECTION_PATH}/gather-managed.log
 
     #to capture details in the managed cluster namespace to debug hive issues
     #refer https://github.com/open-cluster-management/backlog/issues/2682
-    MCNAMESPACE=`oc get managedclusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.name"`
-    for mcns in "${MCNAMESPACE[@]}";
+    local mc_namespaces=$(oc get managedclusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.name")
+    for mcns in ${mc_namespaces};
     do
         #oc kubectl get pods -n "$mcns" >> ${BASE_COLLECTION_PATH}/gather-managed.log
         oc adm inspect  ns/"$mcns"  --dest-dir=must-gather
@@ -69,8 +71,8 @@ collect_dr_logs() {
     oc get managedclusteraddons --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/managedclusteraddons_all_namespaces
     oc adm --dest-dir=must-gather inspect managedclusteraddons --all-namespaces
 
-    MANAGEDCLUSTERS=$(oc get managedcluster --no-headers=true | awk '{ print $1 }')
-    for managedcluster in "${MANAGEDCLUSTERS[@]}"; do
+    local managed_clusters=$(oc get managedcluster --no-headers=true | awk '{ print $1 }')
+    for managedcluster in ${managed_clusters}; do
         oc get manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_"${managedcluster}"
         oc describe manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_"${managedcluster}"
         oc get managedclusterview -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_"${managedcluster}"
@@ -79,15 +81,24 @@ collect_dr_logs() {
 }
 
 check_if_hub () {
-    HUBNAMESPACE=`oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }'`
-    echo "$HUBNAMESPACE"
-     #if [[ "$NAMESPACE" != error* ]];
-     #   then CLUSTER="HUB"
-     #fi
-     if [[ -z "$HUBNAMESPACE" ]] ;
-        then CLUSTER="SPOKE"
-     else  CLUSTER="HUB"
-     fi
+    HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }')
+    echo "Hub namespace: $HUB_NAMESPACE"
+    if [[ -n "$HUB_NAMESPACE" ]] ; then
+       echo "This is a hub cluster"
+       HUB_CLUSTER=true
+    else
+       echo "This is not a hub cluster, the above error can be safely ignored"
+    fi
+}
+
+check_if_spoke () {
+    if oc get crd clusterclaims.cluster.open-cluster-management.io;
+    then
+      echo "The current cluster has clusterclaims.cluster.open-cluster-management.io crd, it is a spoke cluster."
+      SPOKE_CLUSTER=true
+    else
+      echo "The current cluster does not have clusterclaims.cluster.open-cluster-management.io crd, it is not a spoke cluster."
+    fi
 }
 
 gather_spoke () {
@@ -99,8 +110,25 @@ gather_spoke () {
 
     oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-agent --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-agent-addon --dest-dir=must-gather
+
+    KLUSTERLETS_NAMES=$(oc get klusterlets.operator.open-cluster-management.io --no-headers=true -o custom-columns="NAME:.metadata.name")
+    for name in ${KLUSTERLETS_NAMES};
+    do
+      local agent_namespace
+      local mode=$(oc get klusterlets.operator.open-cluster-management.io "$name" -o jsonpath='{.spec.deployOption.mode}')
+      echo "klusterlet $name is deployed in $mode mode"
+      if [ "$mode" = 'Hosted' ];
+      then
+        agent_namespace=$name
+      else
+        agent_namespace=$(oc get klusterlets.operator.open-cluster-management.io klusterlet -o jsonpath='{.spec.namespace}')
+      fi
+
+      echo "klusterlet name: $name, agent namespace: $agent_namespace"
+      oc adm inspect ns/"$agent_namespace" --dest-dir=must-gather
+      oc adm inspect ns/"${agent_namespace}-addon" --dest-dir=must-gather
+    done
+
     #oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
     oc adm inspect workmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect applicationmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -132,21 +160,15 @@ gather_spoke () {
     oc adm --dest-dir=must-gather inspect clusterversions
 }
 
-check_if_hub
 
-echo "$CLUSTER"
-
-case "$CLUSTER" in
-    #case 1
-    "HUB")
-
+gather_hub(){
     check_managed_clusters
     #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
     collect_dr_logs
-    oc get pods -n "$HUBNAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log
-    oc get csv -n "$HUBNAMESPACE" >> ${BASE_COLLECTION_PATH}/gather-acm.log
+    oc get pods -n "$HUB_NAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log
+    oc get csv -n "$HUB_NAMESPACE" >> ${BASE_COLLECTION_PATH}/gather-acm.log
     oc version >> ${BASE_COLLECTION_PATH}/gather-acm.log
-    oc adm inspect  ns/"$HUBNAMESPACE"  --dest-dir=must-gather
+    oc adm inspect  ns/"$HUB_NAMESPACE"  --dest-dir=must-gather
     oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
     oc adm inspect  ns/open-cluster-management-backup  --dest-dir=must-gather
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
@@ -228,24 +250,25 @@ case "$CLUSTER" in
 
     # version information
     oc adm --dest-dir=must-gather inspect clusterversions
-    oc adm --dest-dir=must-gather inspect csv -n "$HUBNAMESPACE"
+    oc adm --dest-dir=must-gather inspect csv -n "$HUB_NAMESPACE"
 
     # OpenShift console plug-in enablement
     oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
+}
 
-    # gather hub imported as managed
-    gather_spoke
-    ;;
+check_if_hub
+check_if_spoke
 
+if $HUB_CLUSTER;
+then
+  echo "Start to gather information for hub"
+  gather_hub
+fi
 
-    #case 2
-    "SPOKE")
-    gather_spoke
-    ;;
-
-
-esac
-
-
+if $SPOKE_CLUSTER;
+then
+  echo "Start to gather information for spoke"
+  gather_spoke
+fi
 
 exit 0
