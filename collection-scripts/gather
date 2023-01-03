@@ -84,6 +84,8 @@ check_if_hub () {
 }
 
 gather_spoke () {
+    # collect CRDs to aid automated must-gather readers
+    oc adm inspect customresourcedefinition.apiextensions.k8s.io --dest-dir=must-gather
 
     # application resources on managed cluster
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -205,10 +207,13 @@ case "$CLUSTER" in
     oc adm inspect ansiblejobs.tower.ansible.com --all-namespaces  --dest-dir=must-gather
     
     # Inspect Assisted-installer CRs
-    oc adm inspect infraenv.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect clusterImageSet.hive.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect agent.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect agentclassification.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
     oc adm inspect agentclusterinstall.extensions.hive.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect baremetalhost.metal3.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect agentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect hypershiftagentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect infraenv.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect nmstateconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
 
     # gather hub imported as managed
     gather_spoke
