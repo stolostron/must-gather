@@ -158,6 +158,9 @@ gather_spoke () {
     # Submariner logs
     oc adm inspect ns/submariner-operator --dest-dir=must-gather
 
+    # Get disconneted information
+    oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
+
     # Version info
     oc adm --dest-dir=must-gather inspect clusterversions
 }
@@ -252,6 +255,9 @@ gather_hub(){
     # Submariner Addon CRs
     oc adm inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
     oc adm inspect brokers.submariner.io --all-namespaces --dest-dir=must-gather
+
+    # Get disconneted information
+    oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
 
     # version information
     oc adm --dest-dir=must-gather inspect clusterversions
