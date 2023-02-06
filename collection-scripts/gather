@@ -242,6 +242,7 @@ case "$CLUSTER" in
    
 esac 
 
-
+echo "Runing MCE Must-Gather"
+source mce-gather.sh
 
 exit 0
