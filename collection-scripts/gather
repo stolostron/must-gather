@@ -282,4 +282,7 @@ then
   gather_spoke
 fi
 
+echo "Runing MCE Must-Gather"
+source mce-gather.sh
+
 exit 0
