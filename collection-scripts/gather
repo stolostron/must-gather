@@ -4,7 +4,7 @@
 # Copyright Contributors to the Open Cluster Management project
 
 
-BASE_COLLECTION_PATH="/must-gather"
+BASE_COLLECTION_PATH="./must-gather"
 mkdir -p ${BASE_COLLECTION_PATH}
 
 HUB_CLUSTER=false
@@ -84,13 +84,12 @@ check_if_hub () {
 }
 
 check_if_spoke () {
-    HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }')
-    echo "Hub namespace: $HUB_NAMESPACE"
-    if [[ -n "$HUB_NAMESPACE" ]] ; then
-       echo "This is a hub cluster"
-       HUB_CLUSTER=true
+    if oc get crd clusterclaims.cluster.open-cluster-management.io;
+    then
+      echo "The current cluster has clusterclaims.cluster.open-cluster-management.io crd, it is a spoke cluster."
+      SPOKE_CLUSTER=true
     else
-       echo "This is not a hub cluster, the above error can be safely ignored"
+      echo "The current cluster does not have clusterclaims.cluster.open-cluster-management.io crd, it is not a spoke cluster."
     fi
 }
 
