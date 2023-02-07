@@ -4,7 +4,7 @@
 # Copyright Contributors to the Open Cluster Management project
 
 
-BASE_COLLECTION_PATH="./must-gather"
+BASE_COLLECTION_PATH="/must-gather"
 mkdir -p ${BASE_COLLECTION_PATH}
 
 HUB_CLUSTER=false
