@@ -229,8 +229,7 @@ gather_hub(){
     oc adm inspect  discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  discoveredclusters.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect searchoperators.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect searchcustomizations.search.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect searches.search.open-cluster-management.io --all-namespaces --dest-dir=must-gather
 
     oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
     oc adm inspect ns/open-cluster-management-issuer  --dest-dir=must-gather
