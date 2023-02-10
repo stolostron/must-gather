@@ -141,6 +141,6 @@ fi
 
 if $SPOKE_CLUSTER;
 then
-  echo "Start to gather information for spoke"
+  echo "Start to gather MCE information for spoke"
   gather_spoke
 fi
