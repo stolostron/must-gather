@@ -135,7 +135,7 @@ check_if_spoke
 
 if $HUB_CLUSTER;
 then
-  echo "Start to gather information for hub"
+  echo "Start to gather MCE information for hub"
   gather_hub
 fi
 
