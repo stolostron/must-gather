@@ -197,6 +197,17 @@ gather_hub(){
     oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect subscriptionreports.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
 
+    # gitops resources
+    oc adm inspect gitopscluster.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect argocd.argoproj.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect applicationsets.argoproj.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect managedclustersetbinding.cluster.open-cluster-management.io  --dest-dir=must-gather
+    oc adm inspect managedclusterset.cluster.open-cluster-management.io  --dest-dir=must-gather
+    ARGONS=`oc get argocd --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
+    for a in $ARGONS;
+        oc adm inspect ns/"$a"  --dest-dir=must-gather
+    done
+
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
