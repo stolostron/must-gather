@@ -106,6 +106,9 @@ gather_hub() {
     oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect machinesets.machine.openshift.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect clustercurators.cluster.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect clusterpools.hive.openshift.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect clusterclaims.hive.openshift.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect machinepools.hive.openshift.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect  managedclusterviews.view.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  managedclusteractions.action.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -114,7 +117,9 @@ gather_hub() {
     oc adm inspect  managedclusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  clustermanagers.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect  managedserviceaccounts.authentication.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
+    oc adm inspect  managedclustersets.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  managedclustersetbindings.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect  managedclusterimageregistries.imageregistry.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
     oc adm inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
