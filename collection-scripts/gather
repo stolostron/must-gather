@@ -207,6 +207,7 @@ gather_hub(){
     for a in $ARGONS;
         oc adm inspect ns/"$a"  --dest-dir=must-gather
     done
+    oc adm inspect multiclusterapplicationsetreports.apps.open-cluster-management.io --dest-dir=must-gather
 
     oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
