@@ -158,6 +158,9 @@ gather_spoke () {
     # Submariner logs
     oc adm inspect ns/submariner-operator --dest-dir=must-gather
 
+    # Multicluster Global Hub Agent information
+    oc adm inspect ns/open-cluster-management-global-hub-system --dest-dir=must-gather
+
     # Get disconneted information
     oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
 
@@ -205,6 +208,7 @@ gather_hub(){
     oc adm inspect managedclusterset.cluster.open-cluster-management.io  --dest-dir=must-gather
     ARGONS=`oc get argocd --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
     for a in $ARGONS;
+    do
         oc adm inspect ns/"$a"  --dest-dir=must-gather
     done
     oc adm inspect multiclusterapplicationsetreports.apps.open-cluster-management.io --dest-dir=must-gather
@@ -267,6 +271,25 @@ gather_hub(){
     # Submariner Addon CRs
     oc adm inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
     oc adm inspect brokers.submariner.io --all-namespaces --dest-dir=must-gather
+
+    # Multicluster GlobalHub information
+    oc adm inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+    # kafka
+    oc adm inspect kafkas.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect kafkatopics.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect kafkausers.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
+    KAFKANS=`oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
+    for kns in $KAFKANS;
+    do
+        oc adm inspect ns/"$kns"  --dest-dir=must-gather
+    done
+    # postgresql
+    oc adm inspect postgresclusters.postgres-operator.crunchydata.com --all-namespaces --dest-dir=must-gather
+    POSTGRESNS=`oc get postgresclusters.postgres-operator.crunchydata.com --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
+    for pns in $POSTGRESNS;
+    do
+        oc adm inspect ns/"$pns"  --dest-dir=must-gather
+    done
 
     # Get disconneted information
     oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
