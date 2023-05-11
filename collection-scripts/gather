@@ -274,22 +274,25 @@ gather_hub(){
 
     # Multicluster GlobalHub information
     oc adm inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-    # kafka
-    oc adm inspect kafkas.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect kafkatopics.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect kafkausers.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-    KAFKANS=`oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-    for kns in $KAFKANS;
-    do
-        oc adm inspect ns/"$kns"  --dest-dir=must-gather
-    done
-    # postgresql
-    oc adm inspect postgresclusters.postgres-operator.crunchydata.com --all-namespaces --dest-dir=must-gather
-    POSTGRESNS=`oc get postgresclusters.postgres-operator.crunchydata.com --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-    for pns in $POSTGRESNS;
-    do
-        oc adm inspect ns/"$pns"  --dest-dir=must-gather
-    done
+    if [ $? = 0 ];
+    then
+      # kafka
+      oc adm inspect kafkas.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
+      oc adm inspect kafkatopics.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
+      oc adm inspect kafkausers.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
+      KAFKANS=`oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
+      for kns in $KAFKANS;
+      do
+          oc adm inspect ns/"$kns"  --dest-dir=must-gather
+      done
+      # postgresql
+      oc adm inspect postgresclusters.postgres-operator.crunchydata.com --all-namespaces --dest-dir=must-gather
+      POSTGRESNS=`oc get postgresclusters.postgres-operator.crunchydata.com --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
+      for pns in $POSTGRESNS;
+      do
+          oc adm inspect ns/"$pns"  --dest-dir=must-gather
+      done
+    fi
 
     # Get disconneted information
     oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
