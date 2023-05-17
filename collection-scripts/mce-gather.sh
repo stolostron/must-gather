@@ -133,6 +133,10 @@ gather_hub() {
 
     oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
 
+    # Topology Aware Lifecycle Manager CRs
+    oc adm inspect ns/openshift-operators  --dest-dir=must-gather
+    oc adm inspect clustergroupupgrades.ran.openshift.io --all-namespaces  --dest-dir=must-gather
+
     # Inspect Assisted-installer CRs
     oc adm inspect agent.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
     oc adm inspect agentclassification.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
