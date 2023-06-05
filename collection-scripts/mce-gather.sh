@@ -131,6 +131,15 @@ gather_hub() {
 
     oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
 
+    # Inspect Assisted-installer CRs
+    oc adm inspect agent.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect agentclassification.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect agentclusterinstall.extensions.hive.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect agentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect hypershiftagentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect infraenv.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect nmstateconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
+
     # OpenShift console plug-in enablement
     oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
 }
