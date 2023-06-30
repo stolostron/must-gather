@@ -148,6 +148,12 @@ gather_hub() {
 
     # OpenShift console plug-in enablement
     oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
+
+    # Capture metal3 logs if the customer has at least one baremetalhost cr which indicates that bmc is being used to create new clusters
+    if oc get baremetalhosts.metal3.io --all-namespaces &> /dev/null;
+    then
+      oc adm inspect ns/openshift-machine-api --dest-dir=must-gather
+    fi
 }
 
 check_if_hub
