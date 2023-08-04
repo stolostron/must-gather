@@ -132,6 +132,7 @@ gather_hub() {
     oc adm inspect operatorgroups.operators.coreos.com --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
 
     oc adm inspect baremetalhosts.metal3.io --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
+    oc adm inspect preprovisioningimages.metal3.io --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
 
     oc adm inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
     oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
