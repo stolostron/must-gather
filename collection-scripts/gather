@@ -21,7 +21,7 @@ check_managed_clusters() {
 
     #to capture details in the managed cluster namespace to debug hive issues
     #refer https://github.com/open-cluster-management/backlog/issues/2682
-    local mc_namespaces=$(oc get managedclusters --all-namespaces --no-headers=true -o custom-columns="NAMESPACE:.metadata.name")
+    local mc_namespaces=$(oc get clusterdeployments.hive.openshift.io -A -o custom-columns=":metadata.namespace" --no-headers=true| sort -u)
     for mcns in ${mc_namespaces};
     do
         #oc kubectl get pods -n "$mcns" >> ${BASE_COLLECTION_PATH}/gather-managed.log
@@ -71,7 +71,7 @@ collect_dr_logs() {
     oc get managedclusteraddons --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/managedclusteraddons_all_namespaces
     oc adm --dest-dir=must-gather inspect managedclusteraddons --all-namespaces
 
-    local managed_clusters=$(oc get managedcluster --no-headers=true | awk '{ print $1 }')
+    local managed_clusters=$(oc get drpolicy -A -o custom-columns=":spec.drClusters" --no-headers=true | sed 's/[][]//g' | sed 's/ /\n/g' | sort -u )
     for managedcluster in ${managed_clusters}; do
         oc get manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_"${managedcluster}"
         oc describe manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_"${managedcluster}"
