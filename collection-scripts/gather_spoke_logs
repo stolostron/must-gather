@@ -1,0 +1,80 @@
+#!/bin/bash
+#set -x
+# Copyright (c) 2023 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+gather_spoke () {
+    # collect CRDs to aid automated must-gather readers
+    echo "Gathering spoke information for MCE"
+    oc adm inspect customresourcedefinition.apiextensions.k8s.io --dest-dir=must-gather
+
+    oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
+    oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
+    oc adm inspect appliedmanifestworks.work.open-cluster-management.io --all-namespaces --dest-dir=$BASE_COLLECTION_PATH
+
+    KLUSTERLETS_NAMES=$(oc get klusterlets.operator.open-cluster-management.io --no-headers=true -o custom-columns="NAME:.metadata.name")
+    for name in ${KLUSTERLETS_NAMES};
+    do
+      local agent_namespace
+      local mode=$(oc get klusterlets.operator.open-cluster-management.io "$name" -o jsonpath='{.spec.deployOption.mode}')
+      echo "klusterlet $name is deployed in $mode mode"
+      if [ "$mode" = 'Hosted' ];
+      then
+        agent_namespace=$name
+      else
+        agent_namespace=$(oc get klusterlets.operator.open-cluster-management.io klusterlet -o jsonpath='{.spec.namespace}')
+      fi
+
+      echo "klusterlet name: $name, agent namespace: $agent_namespace"
+      oc adm inspect ns/"$agent_namespace" --dest-dir=must-gather
+      oc adm inspect ns/"${agent_namespace}-addon" --dest-dir=must-gather
+    done
+
+    oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper and volsync operator will be installed in this ns in production
+}
+
+gather_spoke
+oc get crd policies.policy.open-cluster-management.io
+if [ $? -eq 0 ];
+then
+    echo "Gathering spoke information for ACM"
+    # application resources on managed cluster
+    oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+    oc adm inspect subscriptionstatus.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+
+    #oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
+    oc adm inspect workmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect applicationmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect certpolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect iampolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect policycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect searchcollectors.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect configurationpolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+
+    oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
+
+    # VolSync CRs
+    oc adm inspect replicationdestinations.volsync.backube --all-namespaces --dest-dir=must-gather
+    oc adm inspect replicationsources.volsync.backube --all-namespaces --dest-dir=must-gather
+
+    oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
+    oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper and volsync operator will be installed in this ns in production
+    oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
+
+    # Submariner logs
+    oc adm inspect ns/submariner-operator --dest-dir=must-gather
+
+    # Multicluster Global Hub Agent information
+    oc adm inspect ns/open-cluster-management-global-hub-system --dest-dir=must-gather
+
+    # Get disconneted information
+    oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
+
+    # Version info
+    oc adm --dest-dir=must-gather inspect clusterversions
+fi

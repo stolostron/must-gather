@@ -1,327 +1,69 @@
 #!/bin/bash
 #set -x
-# Copyright (c) 2021 Red Hat, Inc.
+# Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
 
 BASE_COLLECTION_PATH="/must-gather"
 mkdir -p ${BASE_COLLECTION_PATH}
 
+MCE_CLUSTER=false
 HUB_CLUSTER=false
 SPOKE_CLUSTER=false
-HUB_NAMESPACE=""
+MCE_NAME=""
+OPERATOR_NAMESPACE=""
+DEPLOYMENT_NAMESPACE=""
+GATHER_MCE_RAN=false
+GATHER_HUB_RAN=false
+LARGE_ENV=false
 
-check_managed_clusters() {
-    {
-      echo "The list of managed clusters that are configured on this Hub:"
-      #These calls will change with new API
-      oc get managedclusters --all-namespaces
-      oc version
-    } >> ${BASE_COLLECTION_PATH}/gather-managed.log
-
-    #to capture details in the managed cluster namespace to debug hive issues
-    #refer https://github.com/open-cluster-management/backlog/issues/2682
-    local mc_namespaces=$(oc get clusterdeployments.hive.openshift.io -A -o custom-columns=":metadata.namespace" --no-headers=true| sort -u)
-    for mcns in ${mc_namespaces};
-    do
-        #oc kubectl get pods -n "$mcns" >> ${BASE_COLLECTION_PATH}/gather-managed.log
-        oc adm inspect  ns/"$mcns"  --dest-dir=must-gather
-    done
-
-}
-
-collect_dr_logs() {
-    mkdir -p ${BASE_COLLECTION_PATH}/Ramen_resources
-    # Collect logs for oc get mirrorpeers
-    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_mirrorpeers
-    oc get mirrorpeers >> ${COMMAND_OUTPUT_FILE}
-    # Collect yaml of mirrorpeers
-    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/yaml_mirrorpeers
-    oc get mirrorpeers -oyaml >> ${COMMAND_OUTPUT_FILE}
-    # Collect logs for oc describe mirrorpeers
-    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_mirrorpeers
-    oc describe mirrorpeers >> ${COMMAND_OUTPUT_FILE}
-    # Collect logs for oc get drpolicy
-    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_drpolicy
-    oc get drpolicy >> ${COMMAND_OUTPUT_FILE}
-    # Collect logs for oc describe drpolicy
-    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_drpolicy
-    oc describe drpolicy >> ${COMMAND_OUTPUT_FILE}
-    oc adm --dest-dir=must-gather inspect drpolicy
-    # Collect logs for oc get DRCluster
-    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_drcluster
-    oc get DRCluster >> ${COMMAND_OUTPUT_FILE}
-    # Collect logs for oc describe DRCluster
-    COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_drcluster
-    oc describe DRCluster >> ${COMMAND_OUTPUT_FILE}
-    oc adm --dest-dir=must-gather inspect DRCluster
-    # For Channels of all namespaces
-    oc get channel --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/channel_all_namespace
-    oc adm --dest-dir=must-gather inspect channel --all-namespaces
-    # For DRPlacementControl of all namespaces
-    oc get drplacementcontrol --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/drplacementcontrol_all_namespaces
-    oc adm --dest-dir=must-gather inspect drplacementcontrol --all-namespaces
-    # For placement rule of all namespaces
-    oc get placementrule --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/placementrule_all_namespaces
-    oc adm --dest-dir=must-gather inspect placementrule --all-namespaces
-    # For subscription of all namespaces
-    oc get subscription --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/subscription_all_namespaces
-    oc adm --dest-dir=must-gather inspect subscription --all-namespaces
-    # For ManagedClusterAddons of all namespaces
-    oc get managedclusteraddons --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/managedclusteraddons_all_namespaces
-    oc adm --dest-dir=must-gather inspect managedclusteraddons --all-namespaces
-
-    local managed_clusters=$(oc get drpolicy -A -o custom-columns=":spec.drClusters" --no-headers=true | sed 's/[][]//g' | sed 's/ /\n/g' | sort -u )
-    for managedcluster in ${managed_clusters}; do
-        oc get manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_"${managedcluster}"
-        oc describe manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_"${managedcluster}"
-        oc get managedclusterview -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_"${managedcluster}"
-        oc describe managedclusterview -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_managedclusterview_"${managedcluster}"
-    done
+check_if_engine () {
+    MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+    if [[ -n "$MCE_NAME" ]];
+    then
+      echo -e "Detected MCE resource: \"$MCE_NAME\" on current cluster. This cluster has been verified as an engine cluster.\n"
+      MCE_CLUSTER=true
+      OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
+      DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
+    else
+      echo -e "No MCE resource detected on the current cluster. This is not an engine cluster (Previous errors can be safely ignored).\n"
+    fi
 }
 
 check_if_hub () {
-    HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }')
-    echo "Hub namespace: $HUB_NAMESPACE"
-    if [[ -n "$HUB_NAMESPACE" ]] ; then
-       echo "This is a hub cluster"
-       HUB_CLUSTER=true
+    if oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true;
+    then
+      echo -e "Detected MCH resource. This cluster has been verified as a hub cluster.\n"
+      HUB_CLUSTER=true
     else
-       echo "This is not a hub cluster, the above error can be safely ignored"
+      echo -e "No MCH resource detected on the current cluster. This is not a hub cluster (Previous errors can be safely ignored).\n"
     fi
 }
 
 check_if_spoke () {
-    if oc get crd clusterclaims.cluster.open-cluster-management.io;
+    if oc get crd klusterlets.operator.open-cluster-management.io;
     then
-      echo "The current cluster has clusterclaims.cluster.open-cluster-management.io crd, it is a spoke cluster."
-      SPOKE_CLUSTER=true
+      echo -e "The current cluster has klusterlets.operator.open-cluster-management.io crd, it is a spoke cluster.\n"
+      export SPOKE_CLUSTER=true
     else
-      echo "The current cluster does not have clusterclaims.cluster.open-cluster-management.io crd, it is not a spoke cluster."
+      echo -e "The current cluster does not have klusterlets.operator.open-cluster-management.io crd, it is not a spoke cluster.\n"
     fi
 }
 
-gather_spoke () {
-    # collect CRDs to aid automated must-gather readers
-    oc adm inspect customresourcedefinition.apiextensions.k8s.io --dest-dir=must-gather
-
-    # application resources on managed cluster
-    oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect subscriptionstatus.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect klusterlets.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    KLUSTERLETS_NAMES=$(oc get klusterlets.operator.open-cluster-management.io --no-headers=true -o custom-columns="NAME:.metadata.name")
-    for name in ${KLUSTERLETS_NAMES};
-    do
-      local agent_namespace
-      local mode=$(oc get klusterlets.operator.open-cluster-management.io "$name" -o jsonpath='{.spec.deployOption.mode}')
-      echo "klusterlet $name is deployed in $mode mode"
-      if [ "$mode" = 'Hosted' ];
-      then
-        agent_namespace=$name
-      else
-        agent_namespace=$(oc get klusterlets.operator.open-cluster-management.io klusterlet -o jsonpath='{.spec.namespace}')
-      fi
-
-      echo "klusterlet name: $name, agent namespace: $agent_namespace"
-      oc adm inspect ns/"$agent_namespace" --dest-dir=must-gather
-      oc adm inspect ns/"${agent_namespace}-addon" --dest-dir=must-gather
-    done
-
-    #oc adm inspect endpoints.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
-    oc adm inspect workmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect applicationmanagers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect certpolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect iampolicycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect policycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect searchcollectors.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect configurationpolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
-
-    # VolSync CRs
-    oc adm inspect replicationdestinations.volsync.backube --all-namespaces --dest-dir=must-gather
-    oc adm inspect replicationsources.volsync.backube --all-namespaces --dest-dir=must-gather
-
-    oc adm inspect ns/openshift-gatekeeper-system --dest-dir=must-gather
-    oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper and volsync operator will be installed in this ns in production
-    oc adm inspect ns/openshift-gatekeeper-operator --dest-dir=must-gather
-
-    # Submariner logs
-    oc adm inspect ns/submariner-operator --dest-dir=must-gather
-
-    # Multicluster Global Hub Agent information
-    oc adm inspect ns/open-cluster-management-global-hub-system --dest-dir=must-gather
-
-    # Get disconneted information
-    oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
-
-    # Version info
-    oc adm --dest-dir=must-gather inspect clusterversions
-}
-
-
-gather_hub(){
-    check_managed_clusters
-    #oc adm inspect  ns/open-cluster-management  --dest-dir=must-gather
-    collect_dr_logs
-    oc get pods -n "$HUB_NAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log
-    oc get csv -n "$HUB_NAMESPACE" >> ${BASE_COLLECTION_PATH}/gather-acm.log
-    oc version >> ${BASE_COLLECTION_PATH}/gather-acm.log
-    oc adm inspect  ns/"$HUB_NAMESPACE"  --dest-dir=must-gather
-    oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
-    oc adm inspect  ns/open-cluster-management-backup  --dest-dir=must-gather
-    # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
-    oc get proxy -o yaml > ${BASE_COLLECTION_PATH}/gather-proxy.log
-    oc adm inspect  ns/hive  --dest-dir=must-gather
-    oc adm inspect  multiclusterhubs.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    #oc adm inspect endpointconfigs.multicloud.ibm.com --all-namespaces  --dest-dir=must-gather
-    oc adm inspect hiveconfigs.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect baremetalhosts.metal3.io --all-namespaces  --dest-dir=must-gather
-
-    # application resources
-    oc adm inspect applications.app.k8s.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect channels.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect deployables.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect subscriptionreports.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-
-    # gitops resources
-    oc adm inspect gitopscluster.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect argocd.argoproj.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect applicationsets.argoproj.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect managedclustersetbinding.cluster.open-cluster-management.io  --dest-dir=must-gather
-    oc adm inspect managedclusterset.cluster.open-cluster-management.io  --dest-dir=must-gather
-    ARGONS=`oc get argocd --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-    for a in $ARGONS;
-    do
-        oc adm inspect ns/"$a"  --dest-dir=must-gather
-    done
-    oc adm inspect multiclusterapplicationsetreports.apps.open-cluster-management.io --dest-dir=must-gather
-
-    oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect placementbindings.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect syncsets.hive.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect machinesets.machine.openshift.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect clustercurators.cluster.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-
-    oc adm inspect  managedclusterviews.view.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  managedclusteractions.action.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  manifestworks.work.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  managedclusters.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  managedclusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  clustermanagers.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect  klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
-
-    oc adm inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect managedclusteraddons.addon.open-cluster-management.io  --all-namespaces  --dest-dir=must-gather
-    oc adm inspect addondeploymentconfigs.addon.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
-    oc adm inspect observatoria.core.observatorium.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
-
-    oc adm inspect  discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  discoveredclusters.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect searches.search.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-
-
-    oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-issuer  --dest-dir=must-gather
-
-    oc adm inspect restores.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect backupschedules.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect backupstoragelocations.velero.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect backups.velero.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect restores.velero.io --all-namespaces  --dest-dir=must-gather
-
-    oc adm inspect ansiblejobs.tower.ansible.com --all-namespaces  --dest-dir=must-gather
-
-    # Inspect Assisted-installer CRs
-    oc adm inspect agent.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect agentclassification.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect agentclusterinstall.extensions.hive.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect agentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect hypershiftagentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect infraenv.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect nmstateconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-
-    # Submariner Addon CRs
-    oc adm inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect brokers.submariner.io --all-namespaces --dest-dir=must-gather
-
-    # Multicluster GlobalHub information
-    oc adm inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-    if [ $? = 0 ];
-    then
-      # kafka
-      oc adm inspect kafkas.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect kafkatopics.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect kafkausers.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-      KAFKANS=`oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-      for kns in $KAFKANS;
-      do
-          oc adm inspect ns/"$kns"  --dest-dir=must-gather
-      done
-      # postgresql
-      oc adm inspect postgresclusters.postgres-operator.crunchydata.com --all-namespaces --dest-dir=must-gather
-      POSTGRESNS=`oc get postgresclusters.postgres-operator.crunchydata.com --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-      for pns in $POSTGRESNS;
-      do
-          oc adm inspect ns/"$pns"  --dest-dir=must-gather
-      done
-    fi
-
-    # Get disconneted information
-    oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
-
-    # version information
-    oc adm --dest-dir=must-gather inspect clusterversions
-    oc adm --dest-dir=must-gather inspect csv -n "$HUB_NAMESPACE"
-
-    # OpenShift console plug-in enablement
-    oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
-}
-
-check_if_hub
+check_if_engine
 check_if_spoke
 
-if $HUB_CLUSTER;
-then
-  echo "Start to gather information for hub"
-  gather_hub
+if $MCE_CLUSTER; then
+  echo "Running MulticlusterEngine Must-Gather"
+  source /usr/bin/gather_mce_logs
+  check_if_hub
+  if $HUB_CLUSTER; then
+    echo "Running ACM MultiClusterHub Must-Gather"
+    source /usr/bin/gather_all_logs
+  fi
 fi
 
 if $SPOKE_CLUSTER;
 then
-  echo "Start to gather information for spoke"
-  gather_spoke
+  source /usr/bin/gather_spoke_logs
 fi
-
-echo "Runing MCE Must-Gather"
-source mce-gather.sh
-
-exit 0

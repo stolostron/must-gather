@@ -1,0 +1,11 @@
+#!/bin/bash
+#set -x
+# Copyright (c) 2023 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+source /usr/bin/gather_mce_logs
+source /usr/bin/gather_hub_logs
+source /usr/bin/gather_observability_logs
+source /usr/bin/gather_application_lifecycle_logs
+source /usr/bin/gather_dr_logs
+source /usr/bin/gather_governance_logs
