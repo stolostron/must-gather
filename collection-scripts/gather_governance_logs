@@ -1,0 +1,12 @@
+#!/bin/bash
+#set -x
+# Copyright (c) 2023 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+source gather_mce_logs
+source gather_hub_logs
+
+oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+oc adm inspect placementbindings.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather

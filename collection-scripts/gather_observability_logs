@@ -1,0 +1,15 @@
+#!/bin/bash
+#set -x
+# Copyright (c) 2023 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+source gather_mce_logs
+source gather_hub_logs
+
+MCO_NAME=$(oc get multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+if [[ -n "$MCO_NAME" ]]; then
+    oc adm inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
+    oc adm inspect observatoria.core.observatorium.io --all-namespaces  --dest-dir=must-gather
+fi

@@ -1,0 +1,60 @@
+#!/bin/bash
+#set -x
+# Copyright (c) 2023 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+oc adm --dest-dir=must-gather inspect DRCluster
+if [ $? -eq 0 ];
+then  
+  source gather_mce_logs
+  source gather_hub_logs
+  echo "Collecting DR information"  
+  mkdir -p ${BASE_COLLECTION_PATH}/Ramen_resources
+  # Collect logs for oc get mirrorpeers
+  COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_mirrorpeers
+  oc get mirrorpeers >> ${COMMAND_OUTPUT_FILE}
+  # Collect yaml of mirrorpeers
+  COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/yaml_mirrorpeers
+  oc get mirrorpeers -oyaml >> ${COMMAND_OUTPUT_FILE}
+  # Collect logs for oc describe mirrorpeers
+  COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_mirrorpeers
+  oc describe mirrorpeers >> ${COMMAND_OUTPUT_FILE}
+  # Collect logs for oc get drpolicy
+  COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_drpolicy
+  oc get drpolicy >> ${COMMAND_OUTPUT_FILE}
+  # Collect logs for oc describe drpolicy
+  COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_drpolicy
+  oc describe drpolicy >> ${COMMAND_OUTPUT_FILE}
+  oc adm --dest-dir=must-gather inspect drpolicy
+  # Collect logs for oc get DRCluster
+  COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_drcluster
+  oc get DRCluster >> ${COMMAND_OUTPUT_FILE}
+  # Collect logs for oc describe DRCluster
+  COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/desc_drcluster
+  oc describe DRCluster >> ${COMMAND_OUTPUT_FILE}
+  # For Channels of all namespaces
+  oc get channel --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/channel_all_namespace
+  oc adm --dest-dir=must-gather inspect channel --all-namespaces
+  # For DRPlacementControl of all namespaces
+  oc get drplacementcontrol --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/drplacementcontrol_all_namespaces
+  oc adm --dest-dir=must-gather inspect drplacementcontrol --all-namespaces
+  # For placement rule of all namespaces
+  oc get placementrule --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/placementrule_all_namespaces
+  oc adm --dest-dir=must-gather inspect placementrule --all-namespaces
+  # For subscription of all namespaces
+  oc get subscription --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/subscription_all_namespaces
+  oc adm --dest-dir=must-gather inspect subscription --all-namespaces
+  # For ManagedClusterAddons of all namespaces
+  oc get managedclusteraddons --all-namespaces >> ${BASE_COLLECTION_PATH}/Ramen_resources/managedclusteraddons_all_namespaces
+  oc adm --dest-dir=must-gather inspect managedclusteraddons --all-namespaces
+  
+  local managed_clusters=$(oc get drpolicy -A -o custom-columns=":spec.drClusters" --no-headers=true | sed 's/[][]//g' | sed 's/ /\n/g' | sort -u)
+  for managedcluster in ${managed_clusters}; do
+      oc get manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_"${managedcluster}"
+      oc describe manifestwork -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_"${managedcluster}"
+      oc get managedclusterview -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_"${managedcluster}"
+      oc describe managedclusterview -n "${managedcluster}" >> ${BASE_COLLECTION_PATH}/Ramen_resources/desc_managedclusterview_"${managedcluster}"
+  done
+else
+  echo "Skipping DR logs collection because there's no DRCluster resources configured."
+fi
