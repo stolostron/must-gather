@@ -20,6 +20,20 @@ In addition, if we need to collect must-gather for the OpenShift infrastructure,
 oc adm must-gather
 ```
 
+## Collecting must-gather for a hosted cluster
+If you are having problems creating a hosted cluster, you can use the following command to collect information about the hosted cluster. `hosted-cluster-namespace=HOSTEDCLUSTERNAMESPACE` parameter is optional and if skipped, the hosted cluster is assumed to be in the default namespace which is `clusters`.
+
+```sh
+oc adm must-gather --image=quay.io/stolostron/backplane-must-gather:SNAPSHOTNAME /usr/bin/gather hosted-cluster-namespace=HOSTEDCLUSTERNAMESPACE hosted-cluster-name=HOSTEDCLUSTERNAME 
+```
+
+
+If you need the results to be saved in a named directory, you can use the `--dest-dir=SOMENAME` parameter and optionally create a gzipped tarball.
+
+```sh
+oc adm must-gather --image=quay.io/stolostron/backplane-must-gather:SNAPSHOTNAME /usr/bin/gather hosted-cluster-namespace=HOSTEDCLUSTERNAMESPACE hosted-cluster-name=HOSTEDCLUSTERNAME --dest-dir=SOMENAME ; tar -cvzf SOMENAME.tgz SOMENAME
+```
+
 ## Information Captured
 
 1. The above must-gather command can understand where it is being run - Open Cluster Mangement Hub Server or Managed Cluster and collects data accordingly.
@@ -45,4 +59,21 @@ Data collected for the PODs include:
 
 If we take a look at the cluster-manager POD for example you will see the yaml file which contains detailed output of the POD. You can see the container called registration-operator and its logs.
 
-Rebuild: 2022-09-16
+### Data collected for a hosted cluster
+
+Data from the hosting MCE cluster:
+
+- **Cluster scoped resources**: Nodes definitions of the management cluster.
+- **Namespaced resources**: This includes all the objects from all the relevant namespaces, like configmaps, services, events, logs, etc...
+- **Network logs**: Includes the OVN northbound and southbound DBs and the statuses for each one.
+- **HostedClusters**: Another level of dump, involves all the resources inside of the guest cluster.
+
+Data from the hosted cluster:
+
+- **Cluster scoped resources**: It contains al the cluster-wide objects, things like nodes, CRDs, etc...
+- **Namespaced resources**: This includes all the objects from all the relevant namespaces, like configmaps, services, events, logs, etc...
+
+- **hypershift-dump.tar.gz**: A compressed file of all data collected from both hosting and hosted clusters.
+
+**Note:** The hosted cluster data collection does not contain any secret resources from the cluster, only references to the secret's names.
+
