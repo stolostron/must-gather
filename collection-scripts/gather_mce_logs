@@ -167,6 +167,30 @@ then
         return
     fi
   }
+
+  gather_service_and_event_logs_for_failed_agents() {
+    GATHER_DIR="$1"
+    find ${GATHER_DIR} -path '*/agentclusterinstalls/*.yaml' -type f | while read file; do
+        dir=$(dirname $file)
+        base=$(basename -s .yaml $file)
+
+        # yq eval '.status.conditions[] | select(.type == "Failed") | .status'  must-gather/namespaces/local-cluster/extensions.hive.openshift.io/agentclusterinstalls/local-cluster-cluster-install.yaml
+        failed=$(yq eval '.status.conditions[] | select(.type == "Failed") | .status' $file)
+        if [ "$failed" = "False" ]; then
+                echo "skipping logs and events for non-failed cluster $file"
+                continue
+        fi
+
+        logsURL=$(yq eval '.status.debugInfo.logsURL' $file)
+        if [ -n ${logsURL} ]; then
+                curl -k -o $dir/$base.logs.tar "${logsURL}"
+        fi
+        eventsURL=$(yq eval '.status.debugInfo.eventsURL' $file)
+        if [ -n ${eventsURL} ]; then
+                curl -k -o $dir/$base.events "${eventsURL}"
+        fi
+    done
+  }
   
   gather_hub() {
       check_managed_clusters
@@ -264,8 +288,11 @@ then
   
       # OpenShift console plug-in enablement
       oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
+
+      # Gather any service or event logs for failed agents
+      gather_service_and_event_logs_for_failed_agents must-gather
   }
-  
+
   echo "Start to gather MCE information for hub"
   gather_hub
   check_if_hypershift "$@"
