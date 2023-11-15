@@ -9,3 +9,4 @@ source /usr/bin/gather_observability_logs
 source /usr/bin/gather_application_lifecycle_logs
 source /usr/bin/gather_dr_logs
 source /usr/bin/gather_governance_logs
+python3 /usr/bin/supervisor/entry.py prom | tee /must-gather/acm-inspector.log
