@@ -17,8 +17,8 @@ then
   oc adm inspect  ns/open-cluster-management-backup  --dest-dir=must-gather
   # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
   oc get proxy -o yaml > ${BASE_COLLECTION_PATH}/gather-proxy.log
-  oc adm inspect  multiclusterhubs.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect  klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+  oc adm inspect multiclusterhubs.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+  oc adm inspect klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
   oc adm inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
   oc adm inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
   oc adm inspect managedclusteraddons.addon.open-cluster-management.io  --all-namespaces  --dest-dir=must-gather
@@ -57,6 +57,9 @@ then
     do
         oc adm inspect ns/"$pns"  --dest-dir=must-gather
     done
+    GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }')
+    echo "GlobalHub namespace: $GLOBALHUB_NAMESPACE"
+    oc adm inspect ns/"$GLOBALHUB_NAMESPACE" --dest-dir=must-gather
   fi
 
   # Get disconneted information
