@@ -13,6 +13,8 @@ then
   oc get csv -n "$HUB_NAMESPACE" >> ${BASE_COLLECTION_PATH}/gather-acm.log
   oc version >> ${BASE_COLLECTION_PATH}/gather-acm.log
   oc adm inspect  ns/"$HUB_NAMESPACE"  --dest-dir=must-gather
+  oc adm inspect serviceaccounts --namespace "$HUB_NAMESPACE" --dest-dir=must-gather
+  oc adm inspect roles --namespace "$HUB_NAMESPACE" --dest-dir=must-gather
   oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
   oc adm inspect  ns/open-cluster-management-backup  --dest-dir=must-gather
   # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485

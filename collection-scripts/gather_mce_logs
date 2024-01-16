@@ -214,12 +214,16 @@ then
 
         oc adm inspect ns/"${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
         oc adm inspect ns/"${DEPLOYMENT_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
+        oc adm inspect serviceaccounts --namespace "${DEPLOYMENT_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
+        oc adm inspect roles --namespace "${DEPLOYMENT_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
 
       else
         echo -e "Listing pods in $OPERATOR_NAMESPACE namespace:" >> ${BASE_COLLECTION_PATH}/gather-mce.log
 
         oc get pods -n "${OPERATOR_NAMESPACE}" >> ${BASE_COLLECTION_PATH}/gather-mce.log
         oc adm inspect ns/"${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
+        oc adm inspect serviceaccounts --namespace "${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
+        oc adm inspect roles --namespace "${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
       fi
 
       echo -e "\nClusterServiceVersion for MCE:" >> ${BASE_COLLECTION_PATH}/gather-mce.log
