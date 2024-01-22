@@ -3,9 +3,29 @@
 # Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-source /usr/bin/gather_mce_logs
-source /usr/bin/gather_hub_logs
-source /usr/bin/gather_observability_logs
-source /usr/bin/gather_application_lifecycle_logs
-source /usr/bin/gather_dr_logs
-source /usr/bin/gather_governance_logs
+# Store PIDs of all the subprocesses
+pids=()
+
+source /usr/bin/gather_mce_logs &
+pids+=($!)
+
+source /usr/bin/gather_hub_logs &
+pids+=($!)
+
+source /usr/bin/gather_observability_logs &
+pids+=($!)
+
+source /usr/bin/gather_application_lifecycle_logs &
+pids+=($!)
+
+source /usr/bin/gather_dr_logs &
+pids+=($!)
+
+source /usr/bin/gather_governance_logs &
+pids+=($!)
+
+# Check if PID array has any values, if so, wait for them to finish
+if [ ${#pids[@]} -ne 0 ]; then
+    echo "Waiting on subprocesses to finish execution."
+    wait "${pids[@]}"
+fi
