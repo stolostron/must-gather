@@ -64,6 +64,9 @@ then
     oc adm inspect ns/"$GLOBALHUB_NAMESPACE" --dest-dir=must-gather
   fi
 
+  # Multicluster Global Hub Agent information
+  oc adm inspect ns/multicluster-global-hub-agent --dest-dir=must-gather
+
   # Get disconneted information
   oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
 

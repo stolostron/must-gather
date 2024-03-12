@@ -69,9 +69,6 @@ then
     # Submariner logs
     oc adm inspect ns/submariner-operator --dest-dir=must-gather
 
-    # Multicluster Global Hub Agent information
-    oc adm inspect ns/multicluster-global-hub-agent --dest-dir=must-gather
-
     # Get disconneted information
     oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
 
