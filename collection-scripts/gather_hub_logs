@@ -57,6 +57,9 @@ then
     do
         oc adm inspect ns/"$pns"  --dest-dir=must-gather
     done
+    GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }')
+    echo "GlobalHub namespace: $GLOBALHUB_NAMESPACE"
+    oc adm inspect ns/"$GLOBALHUB_NAMESPACE" --dest-dir=must-gather
   fi
 
   # Get disconneted information
