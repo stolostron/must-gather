@@ -18,16 +18,23 @@ gather_spoke () {
       local agent_namespace
       local mode=$(oc get klusterlets.operator.open-cluster-management.io "$name" -o jsonpath='{.spec.deployOption.mode}')
       echo "klusterlet $name is deployed in $mode mode"
-      if [ "$mode" = 'Hosted' ];
+      if [ "$mode" = 'Hosted' ] || [ "$mode" = 'SingletonHosted' ];
       then
         agent_namespace=$name
       else
-        agent_namespace=$(oc get klusterlets.operator.open-cluster-management.io klusterlet -o jsonpath='{.spec.namespace}')
+        agent_namespace=$(oc get klusterlets.operator.open-cluster-management.io "$name" -o jsonpath='{.spec.namespace}')
       fi
 
       echo "klusterlet name: $name, agent namespace: $agent_namespace"
       oc adm inspect ns/"$agent_namespace" --dest-dir=must-gather
-      oc adm inspect ns/"${agent_namespace}-addon" --dest-dir=must-gather
+    done
+
+    # gather all the customized addon namespaces
+    oc adm inspect ns/"open-cluster-management-agent-addon" --dest-dir=$BASE_COLLECTION_PATH
+    CUSTOMIZED_ADDON_NAMESPACES=$(oc get ns -l addon.open-cluster-management.io/namespace=true -o custom-columns="NAME:.metadata.name") 
+    for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES};
+    do
+      oc adm inspect ns/"$addon_namespace" --dest-dir=$BASE_COLLECTION_PATH
     done
 
     oc adm inspect ns/openshift-operators --dest-dir=must-gather # gatekeeper and volsync operator will be installed in this ns in production
