@@ -1,10 +1,13 @@
-**Related Issue:**  stolostron/backlog#<ISSUE_NUMBER>
+**Related Issue:**
 
 **Description of Changes:**
 
-**What resource is being added**: <resource name> | N/A
+**What resource(s) are being added:**
 
 **Is this a Hub or Managed cluster change?:**
-Hub Cluster | Managed Cluster | N/A
+
+- [ ] Hub Cluster
+- [ ] Managed Cluster
+- [ ] N/A
 
 **Notes:**
