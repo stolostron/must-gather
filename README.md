@@ -36,7 +36,7 @@ oc adm must-gather --image=quay.io/stolostron/backplane-must-gather:SNAPSHOTNAME
 
 ## Information Captured
 
-1. The above must-gather command can understand where it is being run - Open Cluster Mangement Hub Server or Managed Cluster and collects data accordingly.
+1. The above must-gather command can understand where it is being run - Open Cluster Management Hub Server or Managed Cluster and collects data accordingly.
 2. If run on the Open Cluster Management Hub Server, it will also capture a list of Managed Clusters configured and the status. This is found in the `gather-managed.log` If a Managed Cluster reports a status of not equal to Ready when it is expected to be, then the must-gather command above should be run on the Managed Cluster as well.
 
 ### Data collected
