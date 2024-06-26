@@ -1,7 +1,0 @@
-# Copyright Contributors to the Open Cluster Management project
-
--include /opt/build-harness/Makefile.prow
-
-unit-test:
-	@echo "Running unit tests. (TODO)"
-
