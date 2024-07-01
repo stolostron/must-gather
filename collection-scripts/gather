@@ -1,69 +1,70 @@
-#!/bin/bash
-#set -x
+#! /bin/bash
 # Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source ${SCRIPT_DIR}/gather_utils
 
-BASE_COLLECTION_PATH="/must-gather"
 mkdir -p ${BASE_COLLECTION_PATH}
 
 MCE_CLUSTER=false
 HUB_CLUSTER=false
 SPOKE_CLUSTER=false
 MCE_NAME=""
-OPERATOR_NAMESPACE=""
-DEPLOYMENT_NAMESPACE=""
-GATHER_MCE_RAN=false
-GATHER_HUB_RAN=false
-LARGE_ENV=false
+export OPERATOR_NAMESPACE=""
+export DEPLOYMENT_NAMESPACE=""
+export GATHER_MCE_RAN=false
+export GATHER_HUB_RAN=false
 
-check_if_engine () {
-    MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-    if [[ -n "$MCE_NAME" ]];
-    then
-      echo -e "Detected MCE resource: \"$MCE_NAME\" on current cluster. This cluster has been verified as an engine cluster.\n"
-      MCE_CLUSTER=true
-      OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
-      DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
-    else
-      echo -e "No MCE resource detected on the current cluster. This is not an engine cluster (Previous errors can be safely ignored).\n"
-    fi
+check_if_engine() {
+  MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+  if [[ -n "$MCE_NAME" ]]; then
+    log "Detected MCE resource: \"$MCE_NAME\" on current cluster. This cluster has been verified as an engine cluster."
+    MCE_CLUSTER=true
+    OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
+    DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
+  else
+    log "No MCE resource detected on the current cluster. This is not an engine cluster (Previous errors can be safely ignored)."
+  fi
 }
 
-check_if_hub () {
-    if oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true;
-    then
-      echo -e "Detected MCH resource. This cluster has been verified as a hub cluster.\n"
-      HUB_CLUSTER=true
-    else
-      echo -e "No MCH resource detected on the current cluster. This is not a hub cluster (Previous errors can be safely ignored).\n"
-    fi
+check_if_hub() {
+  log "Detecting Hub cluster by fetching MCH resource..."
+  if oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces; then
+    log "Detected MCH resource. This cluster has been verified as a hub cluster."
+    HUB_CLUSTER=true
+  else
+    log "No MCH resource detected on the current cluster. This is not a hub cluster (Previous errors can be safely ignored)."
+  fi
 }
 
-check_if_spoke () {
-    if oc get crd klusterlets.operator.open-cluster-management.io;
-    then
-      echo -e "The current cluster has klusterlets.operator.open-cluster-management.io crd, it is a spoke cluster.\n"
-      export SPOKE_CLUSTER=true
-    else
-      echo -e "The current cluster does not have klusterlets.operator.open-cluster-management.io crd, it is not a spoke cluster.\n"
-    fi
+check_if_spoke() {
+  log "Detecting Managed cluster by fetching Klusterlet CRD..."
+  if oc get crd klusterlets.operator.open-cluster-management.io; then
+    log "The current cluster has klusterlets.operator.open-cluster-management.io crd, it is a spoke cluster."
+    SPOKE_CLUSTER=true
+  else
+    log "The current cluster does not have klusterlets.operator.open-cluster-management.io crd, it is not a spoke cluster."
+  fi
 }
 
 check_if_engine
 check_if_spoke
 
 if $MCE_CLUSTER; then
-  echo "Running MulticlusterEngine Must-Gather"
-  source /usr/bin/gather_mce_logs
   check_if_hub
   if $HUB_CLUSTER; then
-    echo "Running ACM MultiClusterHub Must-Gather"
-    source /usr/bin/gather_all_logs
+    # NOTE: The `gather_all_logs` script includes `gather_mce_logs`
+    log "Running ACM MultiClusterHub Must-Gather"
+    ${SCRIPT_DIR}/gather_all_logs
+  else
+    log "Running MulticlusterEngine Must-Gather"
+    ${SCRIPT_DIR}/gather_mce_logs
   fi
 fi
 
-if $SPOKE_CLUSTER;
-then
-  source /usr/bin/gather_spoke_logs
+if $SPOKE_CLUSTER; then
+  ${SCRIPT_DIR}/gather_spoke_logs
 fi
+
+log "ACM must-gather complete."

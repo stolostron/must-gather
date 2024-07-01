@@ -1,83 +1,84 @@
-#!/bin/bash
-#set -x
+#! /bin/bash
 # Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-source /usr/bin/gather_mce_logs
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source ${SCRIPT_DIR}/gather_utils
 
-if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ];
-then
-  HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }')
-  echo "Hub namespace: $HUB_NAMESPACE"
-  oc get pods -n "$HUB_NAMESPACE" > ${BASE_COLLECTION_PATH}/gather-acm.log
-  oc get csv -n "$HUB_NAMESPACE" >> ${BASE_COLLECTION_PATH}/gather-acm.log
-  oc version >> ${BASE_COLLECTION_PATH}/gather-acm.log
-  oc adm inspect  ns/"$HUB_NAMESPACE"  --dest-dir=must-gather
-  oc adm inspect serviceaccounts --namespace "$HUB_NAMESPACE" --dest-dir=must-gather
-  oc adm inspect roles --namespace "$HUB_NAMESPACE" --dest-dir=must-gather
-  oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
-  oc adm inspect  ns/open-cluster-management-backup  --dest-dir=must-gather
+if [[ "${GATHER_CONTEXT}" == "true" ]]; then
+  ${SCRIPT_DIR}/gather_mce_logs
+fi
+
+if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
+  log "Starting ACM Hub cluster must-gather"
+  HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+  log "Hub namespace: $HUB_NAMESPACE"
+  oc get pods -n "$HUB_NAMESPACE" >${BASE_COLLECTION_PATH}/gather-acm.log
+  oc get csv -n "$HUB_NAMESPACE" >>${BASE_COLLECTION_PATH}/gather-acm.log
+  oc version >>${BASE_COLLECTION_PATH}/gather-acm.log
+  run_inspect ns/"$HUB_NAMESPACE"
+  run_inspect serviceaccounts --namespace "$HUB_NAMESPACE"
+  run_inspect roles --namespace "$HUB_NAMESPACE"
+  run_inspect ns/open-cluster-management-hub
+  run_inspect ns/open-cluster-management-backup
   # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
-  oc get proxy -o yaml > ${BASE_COLLECTION_PATH}/gather-proxy.log
-  oc adm inspect multiclusterhubs.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
-  oc adm inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
-  oc adm inspect managedclusteraddons.addon.open-cluster-management.io  --all-namespaces  --dest-dir=must-gather
-  oc adm inspect managedproxyconfigurations.proxy.open-cluster-management.io --dest-dir=must-gather
-  oc adm inspect managedproxyserviceresolvers.proxy.open-cluster-management.io --dest-dir=must-gather
-  oc adm inspect addondeploymentconfigs.addon.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect searches.search.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-  oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
-  oc adm inspect ns/open-cluster-management-issuer  --dest-dir=must-gather
-  oc adm inspect restores.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect backupschedules.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect backupstoragelocations.velero.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect backups.velero.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect restores.velero.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect ansiblejobs.tower.ansible.com --all-namespaces  --dest-dir=must-gather
+  oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy.log
+  run_inspect multiclusterhubs.operator.open-cluster-management.io --all-namespaces
+  run_inspect klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces
+  run_inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
+  run_inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
+  run_inspect managedclusteraddons.addon.open-cluster-management.io --all-namespaces
+  run_inspect managedproxyconfigurations.proxy.open-cluster-management.io
+  run_inspect managedproxyserviceresolvers.proxy.open-cluster-management.io
+  run_inspect addondeploymentconfigs.addon.open-cluster-management.io --all-namespaces
+  run_inspect searches.search.open-cluster-management.io --all-namespaces
+  run_inspect ns/openshift-monitoring
+  run_inspect ns/open-cluster-management-issuer
+  run_inspect restores.cluster.open-cluster-management.io --all-namespaces
+  run_inspect backupschedules.cluster.open-cluster-management.io --all-namespaces
+  run_inspect backupstoragelocations.velero.io --all-namespaces
+  run_inspect backups.velero.io --all-namespaces
+  run_inspect restores.velero.io --all-namespaces
+  run_inspect ansiblejobs.tower.ansible.com --all-namespaces
 
   # Submariner Addon CRs
-  oc adm inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-  oc adm inspect brokers.submariner.io --all-namespaces --dest-dir=must-gather
+  run_inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces
+  run_inspect brokers.submariner.io --all-namespaces
 
   # Multicluster GlobalHub information
-  oc adm inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-  if [ $? = 0 ];
-  then
+
+  if run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces; then
     # kafka
-    oc adm inspect kafkas.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect kafkatopics.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-    oc adm inspect kafkausers.kafka.strimzi.io --all-namespaces --dest-dir=must-gather
-    KAFKANS=`oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-    for kns in $KAFKANS;
-    do
-        oc adm inspect ns/"$kns"  --dest-dir=must-gather
+    run_inspect kafkas.kafka.strimzi.io --all-namespaces
+    run_inspect kafkatopics.kafka.strimzi.io --all-namespaces
+    run_inspect kafkausers.kafka.strimzi.io --all-namespaces
+    KAFKANS=$(oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+    for kns in $KAFKANS; do
+      run_inspect ns/"$kns"
     done
     # postgresql
-    oc adm inspect postgresclusters.postgres-operator.crunchydata.com --all-namespaces --dest-dir=must-gather
-    POSTGRESNS=`oc get postgresclusters.postgres-operator.crunchydata.com --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-    for pns in $POSTGRESNS;
-    do
-        oc adm inspect ns/"$pns"  --dest-dir=must-gather
+    run_inspect postgresclusters.postgres-operator.crunchydata.com --all-namespaces
+    POSTGRESNS=$(oc get postgresclusters.postgres-operator.crunchydata.com --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+    for pns in $POSTGRESNS; do
+      run_inspect ns/"$pns"
     done
-    GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true| awk '{ print $1 }')
-    echo "GlobalHub namespace: $GLOBALHUB_NAMESPACE"
-    oc adm inspect ns/"$GLOBALHUB_NAMESPACE" --dest-dir=must-gather
+    GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+    log "GlobalHub namespace: $GLOBALHUB_NAMESPACE"
+    run_inspect ns/"$GLOBALHUB_NAMESPACE"
   fi
 
   # Multicluster Global Hub Agent information
-  oc adm inspect ns/multicluster-global-hub-agent --dest-dir=must-gather
+  run_inspect ns/multicluster-global-hub-agent
 
   # Get disconneted information
-  oc adm inspect imagecontentsourcepolicies.operator.openshift.io  --all-namespaces --dest-dir=must-gather
+  run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
 
   # version information
-  oc adm --dest-dir=must-gather inspect clusterversions
-  oc adm --dest-dir=must-gather inspect csv -n "$HUB_NAMESPACE"
+  run_inspect clusterversions
+  run_inspect csv -n "$HUB_NAMESPACE"
 
   # OpenShift console plug-in enablement
-  oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
+  run_inspect consoles.operator.openshift.io
 
   export GATHER_HUB_RAN=true
 fi
