@@ -1,0 +1,32 @@
+#! /bin/bash
+
+BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"./must-gather"}
+
+# log produces a formatted log string with component, level, and message positional arguments:
+# - 1 argument:  Log message (default log level)
+# - 2 arguments: Custom log level and message
+log() {
+  lvl="${1}"
+  msg="${2}"
+
+  if [[ "$#" == "1" ]]; then
+    msg="${1}"
+    lvl="INFO"
+  fi
+
+  case ${lvl} in
+    INFO | WARN | DEBUG | ERROR);;
+    *) lvl="INFO";;
+  esac
+
+  printf "%s\tacm-must-gather\t%s\n" "${lvl}" "${msg}"
+}
+
+# run_inspect wraps `oc adm inspect` by logging the args and running it with common flags
+run_inspect() {
+  args="$*"
+  log "Inspecting ${args}"
+  # shellcheck disable=SC2086
+  # - BASE_COLLECTION_PATH can't be quoted because `oc` reads the quotes as part of the path
+  oc adm inspect --dest-dir=${BASE_COLLECTION_PATH} "$@"
+}

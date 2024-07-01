@@ -1,15 +1,21 @@
-#!/bin/bash
-#set -x
+#! /bin/bash
 # Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-source gather_mce_logs
-source gather_hub_logs
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source ${SCRIPT_DIR}/gather_utils
+
+log "Starting Observability must-gather"
+
+if [[ "${GATHER_CONTEXT}" == "true" ]]; then
+    ${SCRIPT_DIR}/gather_mce_logs
+    ${SCRIPT_DIR}/gather_hub_logs
+fi
 
 MCO_NAME=$(oc get multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
 if [[ -n "$MCO_NAME" ]]; then
-    oc adm inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect ns/open-cluster-management-observability --dest-dir=must-gather
-    oc adm inspect observatoria.core.observatorium.io --all-namespaces  --dest-dir=must-gather
+    run_inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces
+    run_inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces
+    run_inspect ns/open-cluster-management-observability
+    run_inspect observatoria.core.observatorium.io --all-namespaces
 fi

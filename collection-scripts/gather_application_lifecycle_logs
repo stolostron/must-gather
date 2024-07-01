@@ -1,32 +1,37 @@
-#!/bin/bash
-#set -x
+#! /bin/bash
 # Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-source gather_mce_logs
-source gather_hub_logs
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source ${SCRIPT_DIR}/gather_utils
+
+log "Starting Application lifecycle must-gather"
+
+if [[ "${GATHER_CONTEXT}" == "true" ]]; then
+    ${SCRIPT_DIR}/gather_mce_logs
+    ${SCRIPT_DIR}/gather_hub_logs
+fi
 
 # application resources
-oc adm inspect applications.app.k8s.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect channels.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect deployables.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect helmreleases.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect placementrules.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect subscriptions.apps.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-oc adm inspect subscriptionreports.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+run_inspect applications.app.k8s.io --all-namespaces
+run_inspect channels.apps.open-cluster-management.io --all-namespaces
+run_inspect deployables.apps.open-cluster-management.io --all-namespaces
+run_inspect helmreleases.apps.open-cluster-management.io --all-namespaces
+run_inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces
+run_inspect placements.cluster.open-cluster-management.io --all-namespaces
+run_inspect placementrules.apps.open-cluster-management.io --all-namespaces
+run_inspect subscriptions.apps.open-cluster-management.io --all-namespaces
+run_inspect subscriptionreports.apps.open-cluster-management.io --all-namespaces
 
 # gitops resources
-oc adm inspect gitopscluster.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect argocd.argoproj.io --all-namespaces --dest-dir=must-gather
-oc adm inspect applicationsets.argoproj.io --all-namespaces --dest-dir=must-gather
-oc adm inspect managedclustersetbinding.cluster.open-cluster-management.io  --dest-dir=must-gather
-oc adm inspect managedclusterset.cluster.open-cluster-management.io  --dest-dir=must-gather
-ARGONS=`oc get argocd --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u`
-for a in $ARGONS;
-do
-    oc adm inspect ns/"$a"  --dest-dir=must-gather
+run_inspect gitopscluster.apps.open-cluster-management.io --all-namespaces
+run_inspect argocd.argoproj.io --all-namespaces
+run_inspect applicationsets.argoproj.io --all-namespaces
+run_inspect managedclustersetbinding.cluster.open-cluster-management.io
+run_inspect managedclusterset.cluster.open-cluster-management.io
+ARGONS=$(oc get argocd --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+for a in $ARGONS; do
+    run_inspect ns/"$a"
 done
-oc adm inspect multiclusterapplicationsetreports.apps.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-oc adm inspect clusterpermission.rbac.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+run_inspect multiclusterapplicationsetreports.apps.open-cluster-management.io --all-namespaces
+run_inspect clusterpermission.rbac.open-cluster-management.io --all-namespaces
