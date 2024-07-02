@@ -1,19 +1,19 @@
-#!/bin/bash
-#set -x
+#! /bin/bash
 # Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
-  
-if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ];
-then	
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source ${SCRIPT_DIR}/gather_utils
+
+if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
   BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"/must-gather"}
-  mkdir -p ${BASE_COLLECTION_PATH}
-  
-  if [ $? -ne 0 ]; then
-    echo -e "Failed to create base collection directory: $BASE_COLLECTION_PATH (defaulting path to: \"./must-gather\")."
+
+  if ! mkdir -p ${BASE_COLLECTION_PATH}; then
+    log "WARN" "Failed to create base collection directory: $BASE_COLLECTION_PATH (defaulting path to: \"./must-gather\")."
 
     BASE_COLLECTION_PATH="./must-gather"
     if [[ -d $BASE_COLLECTION_PATH ]]; then
-      echo -e "Directory \"$BASE_COLLECTION_PATH\" already exists. Setting new path to prevent override: \"$BASE_COLLECTION_PATH-$(date +%Y-%m-%d-%s)\"."
+      log "WARN" "Directory \"$BASE_COLLECTION_PATH\" already exists. Setting new path to prevent override: \"$BASE_COLLECTION_PATH-$(date +%Y-%m-%d-%s)\"."
       BASE_COLLECTION_PATH="$BASE_COLLECTION_PATH-$(date +%Y-%m-%d-%s)"
     fi
 
@@ -27,48 +27,46 @@ then
   HC_NAMESPACE="clusters" # default hosted cluster namespace
 
   check_managed_clusters() {
-      touch $MANAGED_CLUSTER_FILE_PATH
-      echo -e "The list of managed clusters that are configured on this hub:" 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
+    touch $MANAGED_CLUSTER_FILE_PATH
+    log "The list of managed clusters that are configured on this hub:" 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
 
-      # These calls will change with new API
-      oc get managedclusters --all-namespaces 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
+    # These calls will change with new API
+    oc get managedclusters --all-namespaces 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
 
-      # to capture details in the managed cluster namespace to debug hive issues
-      # refer https://github.com/open-cluster-management/backlog/issues/2682
-      local mc_namespaces=$(oc get clusterdeployments.hive.openshift.io -A -o custom-columns=":metadata.namespace" --no-headers=true| sort -u)
-  
-      for mcns in ${mc_namespaces}; do
-          oc adm inspect  ns/"$mcns"  --dest-dir=must-gather
-      done
+    # to capture details in the managed cluster namespace to debug hive issues
+    # refer https://github.com/open-cluster-management/backlog/issues/2682
+    local mc_namespaces
+    mc_namespaces=$(oc get clusterdeployments.hive.openshift.io -A -o custom-columns=":metadata.namespace" --no-headers=true | sort -u)
+
+    for mcns in ${mc_namespaces}; do
+      run_inspect ns/"$mcns"
+    done
   }
 
-  check_if_hypershift () {
-      # get the hosted cluster name and optionally namespace
-      while [ "$1" != "" ]; do
-          FLAG=`echo $1 | awk -F= '{print $1}'`
-          VALUE=`echo $1 | awk -F= '{print $2}'`
-          case $FLAG in
-              hosted-cluster-name)
-                  HC_NAME=$VALUE
-                  ;;
-              hosted-cluster-namespace)
-                  HC_NAMESPACE=$VALUE
-                  ;;
-              *)
-                  echo "ERROR: unknown parameter \"$FLAG\""
-                  exit 1
-                  ;;
-          esac
-          shift
-      done
+  check_if_hypershift() {
+    # get the hosted cluster name and optionally namespace
+    while [ "$1" != "" ]; do
+      FLAG=$(echo "$1" | awk -F= '{print $1}')
+      VALUE=$(echo "$1" | awk -F= '{print $2}')
+      case $FLAG in
+      hosted-cluster-name)
+        HC_NAME=$VALUE
+        ;;
+      hosted-cluster-namespace)
+        HC_NAMESPACE=$VALUE
+        ;;
+      *)
+        log "ERROR" "unknown parameter \"$FLAG\""
+        exit 1
+        ;;
+      esac
+      shift
+    done
   }
 
   extract_hypershift_cli() {
-    oc get namespace hypershift
-
-    if [ $? -ne 0 ];
-    then
-      echo "hypershift namespace not found"
+    if ! oc get namespace hypershift; then
+      log "hypershift namespace not found"
       return 1
     fi
 
@@ -76,11 +74,10 @@ then
     oc project hypershift
     HO_POD_NAME=$(oc get pod --no-headers=true --field-selector=status.phase=Running -l app=operator -o custom-columns="NAME:.metadata.name" | head -n 1)
 
-    if [[ -n $HO_POD_NAME ]];
-    then
-      echo "Found a running hypershift operator pod: \"$HO_POD_NAME\""
+    if [[ -n $HO_POD_NAME ]]; then
+      log "Found a running hypershift operator pod: \"$HO_POD_NAME\""
     else
-      echo "No running hypershift operator pod found."
+      log "WARN" "No running hypershift operator pod found."
       return 1
     fi
 
@@ -91,55 +88,47 @@ then
   }
 
   dump_hostedcluster() {
-    if [[ -z $HC_NAME ]];
-    then
-      echo "Hosted cluster name was not provided. Skip collecting hosted cluster must-gather."
+    if [[ -z $HC_NAME ]]; then
+      log "Hosted cluster name was not provided. Skip collecting hosted cluster must-gather."
       return 0
     fi
 
     HC=$(oc get hostedcluster $HC_NAME -n $HC_NAMESPACE)
-    if [[ -z $HC ]];
-    then
-      echo "ERROR: hosted cluster \"$HC_NAME\" not found in \"$HC_NAMESPACE\" namespace"
+    if [[ -z $HC ]]; then
+      log "ERROR" "hosted cluster \"$HC_NAME\" not found in \"$HC_NAMESPACE\" namespace"
       return 1
     fi
 
-    if ! extract_hypershift_cli;
-    then
-      echo "Failed to extract the hypershift CLI binary."
+    if ! extract_hypershift_cli; then
+      log "ERROR" "Failed to extract the hypershift CLI binary."
       return 1
     fi
 
-    echo "Collecting must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\""
+    log "Collecting must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\""
     /tmp/hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $HC_NAME --namespace $HC_NAMESPACE
   }
 
   # This is not supported yet
   gather_all_hostedclusters() {
-    oc adm inspect pod -n open-cluster-management-agent-addon --dest-dir=$BASE_COLLECTION_PATH
-    oc adm inspect pod -n hypershift --dest-dir=$BASE_COLLECTION_PATH
+    run_inspect pod -n open-cluster-management-agent-addon
+    run_inspect pod -n hypershift
 
-    oc get namespace hypershift
-
-    if [ $? -ne 0 ];
-    then
-      echo "hypershift namespace not found"
+    if ! oc get namespace hypershift; then
+      log "hypershift namespace not found"
       return
     fi
 
     HC_NAMESPACES=$(oc get hostedcluster --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
 
-    if [[ -n $HC_NAMESPACES ]];
-    then
+    if [[ -n $HC_NAMESPACES ]]; then
       # Get a running hypershift operator pod
       oc project hypershift
       HO_POD_NAME=$(oc get pod --no-headers=true --field-selector=status.phase=Running -l app=operator -o custom-columns="NAME:.metadata.name" | head -n 1)
 
-      if [[ -n $HO_POD_NAME ]];
-      then
-        echo "Found a running hypershift operator pod: \"$HO_POD_NAME\""
+      if [[ -n $HO_POD_NAME ]]; then
+        log "Found a running hypershift operator pod: \"$HO_POD_NAME\""
       else
-        echo "No running hypershift operator pod found."
+        log "No running hypershift operator pod found."
         return
       fi
 
@@ -147,160 +136,155 @@ then
       oc rsync ${HO_POD_NAME}:/usr/bin/hypershift /tmp
       chmod 755 /tmp/hypershift
 
-      for hc_namespace in ${HC_NAMESPACES};
-      do
+      for hc_namespace in ${HC_NAMESPACES}; do
         HC_LIST=$(oc get hostedcluster -n $hc_namespace --no-headers=true -o custom-columns="NAME:.metadata.name")
-        if [[ -n $HC_LIST ]];
-        then
-            for hc in ${HC_LIST};
-            do
-              echo "Collecting must-gather for hosted cluster $hc"
-              /tmp/hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $hc --namespace $hc_namespace
-            done
+        if [[ -n $HC_LIST ]]; then
+          for hc in ${HC_LIST}; do
+            log "Collecting must-gather for hosted cluster $hc"
+            /tmp/hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $hc --namespace $hc_namespace
+          done
         else
-          echo "No hosted cluster found in $hc_namespace namespace."
+          log "No hosted cluster found in $hc_namespace namespace."
           return
         fi
       done
     else
-        echo "No hosted cluster found."
-        return
+      log "No hosted cluster found."
+      return
     fi
   }
 
   gather_service_and_event_logs_for_failed_agents() {
     GATHER_DIR="$1"
-    find ${GATHER_DIR} -path '*/agentclusterinstalls/*.yaml' -type f | while read file; do
-        dir=$(dirname $file)
-        base=$(basename -s .yaml $file)
+    find ${GATHER_DIR} -path '*/agentclusterinstalls/*.yaml' -type f | while read -r file; do
+      dir=$(dirname $file)
+      base=$(basename -s .yaml $file)
 
-        # yq eval '.status.conditions[] | select(.type == "Failed") | .status'  must-gather/namespaces/local-cluster/extensions.hive.openshift.io/agentclusterinstalls/local-cluster-cluster-install.yaml
-        failed=$(yq eval '.status.conditions[] | select(.type == "Failed") | .status' $file)
-        if [ "$failed" = "False" ]; then
-                echo "skipping logs and events for non-failed cluster $file"
-                continue
-        fi
+      failed=$(yq eval '.status.conditions[] | select(.type == "Failed") | .status' $file)
+      if [ "$failed" = "False" ]; then
+        log "skipping logs and events for non-failed cluster $file"
+        continue
+      fi
 
-        logsURL=$(yq eval '.status.debugInfo.logsURL' $file)
-        if [ -n ${logsURL} ]; then
-                curl -k -o $dir/$base.logs.tar "${logsURL}"
-        fi
-        eventsURL=$(yq eval '.status.debugInfo.eventsURL' $file)
-        if [ -n ${eventsURL} ]; then
-                curl -k -o $dir/$base.events "${eventsURL}"
-        fi
+      logsURL=$(yq eval '.status.debugInfo.logsURL' $file)
+      if [ -n "${logsURL}" ]; then
+        curl -k -o $dir/$base.logs.tar "${logsURL}"
+      fi
+      eventsURL=$(yq eval '.status.debugInfo.eventsURL' $file)
+      if [ -n "${eventsURL}" ]; then
+        curl -k -o $dir/$base.events "${eventsURL}"
+      fi
     done
   }
-  
+
   gather_hub() {
-      check_managed_clusters
+    check_managed_clusters
 
-      if [[ -z "$MCE_NAME" ]];
-      then
-        MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-        OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
-        DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
-      fi
+    if [[ -z "$MCE_NAME" ]]; then
+      MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+      OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
+      DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
+    fi
 
-      # If the namespaces are different, capture the pods in each namespace.
-      if [[ $DEPLOYMENT_NAMESPACE != $OPERATOR_NAMESPACE ]]; then
-        echo -e "\nMCE target and operator namespace are different"
+    # If the namespaces are different, capture the pods in each namespace.
+    if [[ $DEPLOYMENT_NAMESPACE != "$OPERATOR_NAMESPACE" ]]; then
+      log "MCE target and operator namespace are different"
 
-        echo -e "Listing pods in $OPERATOR_NAMESPACE namespace:" >> ${BASE_COLLECTION_PATH}/gather-mce.log
-        oc get pods -n "${OPERATOR_NAMESPACE}" >> ${BASE_COLLECTION_PATH}/gather-mce.log
+      {
+        log "Listing pods in $OPERATOR_NAMESPACE namespace:"
+        oc get pods -n "${OPERATOR_NAMESPACE}"
 
-        echo -e "\nListing pods in $DEPLOYMENT_NAMESPACE namespace:" >> ${BASE_COLLECTION_PATH}/gather-mce.log
-        oc get pods -n "${DEPLOYMENT_NAMESPACE}" >> ${BASE_COLLECTION_PATH}/gather-mce.log
+        log "Listing pods in $DEPLOYMENT_NAMESPACE namespace:"
+        oc get pods -n "${DEPLOYMENT_NAMESPACE}"
+      } >>${BASE_COLLECTION_PATH}/gather-mce.log
 
-        oc adm inspect ns/"${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
-        oc adm inspect ns/"${DEPLOYMENT_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
-        oc adm inspect serviceaccounts --namespace "${DEPLOYMENT_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
-        oc adm inspect roles --namespace "${DEPLOYMENT_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
+      run_inspect ns/"${OPERATOR_NAMESPACE}"
+      run_inspect ns/"${DEPLOYMENT_NAMESPACE}"
+      run_inspect serviceaccounts --namespace "${DEPLOYMENT_NAMESPACE}"
+      run_inspect roles --namespace "${DEPLOYMENT_NAMESPACE}"
 
-      else
-        echo -e "Listing pods in $OPERATOR_NAMESPACE namespace:" >> ${BASE_COLLECTION_PATH}/gather-mce.log
+    else
+      log "Listing pods in $OPERATOR_NAMESPACE namespace:" >>${BASE_COLLECTION_PATH}/gather-mce.log
 
-        oc get pods -n "${OPERATOR_NAMESPACE}" >> ${BASE_COLLECTION_PATH}/gather-mce.log
-        oc adm inspect ns/"${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
-        oc adm inspect serviceaccounts --namespace "${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
-        oc adm inspect roles --namespace "${OPERATOR_NAMESPACE}" --dest-dir=$BASE_COLLECTION_PATH
-      fi
+      oc get pods -n "${OPERATOR_NAMESPACE}" >>${BASE_COLLECTION_PATH}/gather-mce.log
+      run_inspect ns/"${OPERATOR_NAMESPACE}"
+      run_inspect serviceaccounts --namespace "${OPERATOR_NAMESPACE}"
+      run_inspect roles --namespace "${OPERATOR_NAMESPACE}"
+    fi
 
-      echo -e "\nClusterServiceVersion for MCE:" >> ${BASE_COLLECTION_PATH}/gather-mce.log
-      oc get csv -n "${OPERATOR_NAMESPACE}" >> ${BASE_COLLECTION_PATH}/gather-mce.log
-      oc adm inspect  ns/open-cluster-management-hub  --dest-dir=must-gather
-      # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
-      oc get proxy -o yaml > ${BASE_COLLECTION_PATH}/gather-proxy-mce.log
-      oc adm inspect  ns/hive  --dest-dir=must-gather
-      oc adm inspect  multiclusterengines.multicluster.openshift.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect hiveconfigs.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-  
-      oc adm inspect clusterserviceversions.operators.coreos.com --all-namespaces  --dest-dir=must-gather
-      oc adm inspect subscriptions.operators.coreos.com      --all-namespaces  --dest-dir=must-gather
-      oc adm inspect installplans.operators.coreos.com --all-namespaces  --dest-dir=must-gather
-      oc adm inspect operatorgroups.operators.coreos.com --all-namespaces  --dest-dir=must-gather
-  
-      oc adm inspect baremetalhosts.metal3.io --all-namespaces  --dest-dir=must-gather
-  
-      oc adm inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect clusterdeployments.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect syncsets.hive.openshift.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect clusterimagesets.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect machinesets.machine.openshift.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect clustercurators.cluster.open-cluster-management.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect clusterpools.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect clusterclaims.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect machinepools.hive.openshift.io --all-namespaces  --dest-dir=must-gather
-  
-  
-      oc adm inspect  managedclusterviews.view.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  managedclusteractions.action.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  manifestworks.work.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  managedclusters.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  managedclusterinfos.internal.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  clustermanagers.operator.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  managedserviceaccounts.authentication.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  managedclustersets.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  managedclustersetbindings.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  managedclusterimageregistries.imageregistry.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  
-  
-      oc adm inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces --dest-dir=must-gather
-  
-      oc adm inspect  discoveredclusters.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-      oc adm inspect  discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  
-      oc adm inspect managedclusteraddons.addon.open-cluster-management.io  --all-namespaces  --dest-dir=must-gather
-  
-      oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
-  
-      # Topology Aware Lifecycle Manager CRs
-      oc adm inspect ns/openshift-operators  --dest-dir=must-gather
-      oc adm inspect clustergroupupgrades.ran.openshift.io --all-namespaces  --dest-dir=must-gather
-  
-      # Inspect Assisted-installer CRs
-      oc adm inspect agent.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect agentclassification.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect agentclusterinstall.extensions.hive.openshift.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect agentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect hypershiftagentserviceconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect infraenv.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-      oc adm inspect nmstateconfig.agent-install.openshift.io --all-namespaces --dest-dir=must-gather
-  
-      # OpenShift console plug-in enablement
-      oc adm inspect consoles.operator.openshift.io --dest-dir=must-gather
+    log "ClusterServiceVersion for MCE:" >>${BASE_COLLECTION_PATH}/gather-mce.log
+    oc get csv -n "${OPERATOR_NAMESPACE}" >>${BASE_COLLECTION_PATH}/gather-mce.log
+    run_inspect ns/open-cluster-management-hub
+    # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
+    oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy-mce.log
+    run_inspect ns/hive
+    run_inspect multiclusterengines.multicluster.openshift.io --all-namespaces
+    run_inspect hiveconfigs.hive.openshift.io --all-namespaces
 
-      # Gather any service or event logs for failed agents
-      gather_service_and_event_logs_for_failed_agents must-gather
+    run_inspect clusterserviceversions.operators.coreos.com --all-namespaces
+    run_inspect subscriptions.operators.coreos.com --all-namespaces
+    run_inspect installplans.operators.coreos.com --all-namespaces
+    run_inspect operatorgroups.operators.coreos.com --all-namespaces
+
+    run_inspect baremetalhosts.metal3.io --all-namespaces
+
+    run_inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces
+    run_inspect placements.cluster.open-cluster-management.io --all-namespaces
+    run_inspect clusterdeployments.hive.openshift.io --all-namespaces
+    run_inspect syncsets.hive.openshift.io --all-namespaces
+    run_inspect clusterimagesets.hive.openshift.io --all-namespaces
+    run_inspect machinesets.machine.openshift.io --all-namespaces
+    run_inspect clustercurators.cluster.open-cluster-management.io --all-namespaces
+    run_inspect clusterpools.hive.openshift.io --all-namespaces
+    run_inspect clusterclaims.hive.openshift.io --all-namespaces
+    run_inspect machinepools.hive.openshift.io --all-namespaces
+
+    run_inspect managedclusterviews.view.open-cluster-management.io --all-namespaces
+    run_inspect managedclusteractions.action.open-cluster-management.io --all-namespaces
+    run_inspect manifestworks.work.open-cluster-management.io --all-namespaces
+    run_inspect managedclusters.cluster.open-cluster-management.io --all-namespaces
+    run_inspect managedclusterinfos.internal.open-cluster-management.io --all-namespaces
+    run_inspect clustermanagers.operator.open-cluster-management.io --all-namespaces
+    run_inspect managedserviceaccounts.authentication.open-cluster-management.io --all-namespaces
+    run_inspect managedclustersets.cluster.open-cluster-management.io --all-namespaces
+    run_inspect managedclustersetbindings.cluster.open-cluster-management.io --all-namespaces
+    run_inspect managedclusterimageregistries.imageregistry.open-cluster-management.io --all-namespaces
+
+    run_inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
+    run_inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
+
+    run_inspect discoveredclusters.discovery.open-cluster-management.io --all-namespaces
+    run_inspect discoveryconfigs.discovery.open-cluster-management.io --all-namespaces
+    run_inspect discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces
+
+    run_inspect managedclusteraddons.addon.open-cluster-management.io --all-namespaces
+
+    run_inspect ns/openshift-monitoring
+
+    # Topology Aware Lifecycle Manager CRs
+    run_inspect ns/openshift-operators
+    run_inspect clustergroupupgrades.ran.openshift.io --all-namespaces
+
+    # Inspect Assisted-installer CRs
+    run_inspect agent.agent-install.openshift.io --all-namespaces
+    run_inspect agentclassification.agent-install.openshift.io --all-namespaces
+    run_inspect agentclusterinstall.extensions.hive.openshift.io --all-namespaces
+    run_inspect agentserviceconfig.agent-install.openshift.io --all-namespaces
+    run_inspect hypershiftagentserviceconfig.agent-install.openshift.io --all-namespaces
+    run_inspect infraenv.agent-install.openshift.io --all-namespaces
+    run_inspect nmstateconfig.agent-install.openshift.io --all-namespaces
+
+    # OpenShift console plug-in enablement
+    run_inspect consoles.operator.openshift.io
+
+    # Gather any service or event logs for failed agents
+    gather_service_and_event_logs_for_failed_agents ${BASE_COLLECTION_PATH}
   }
 
-  echo "Start to gather MCE information for hub"
+  log "Starting MCE Hub cluster must-gather"
   gather_hub
   check_if_hypershift "$@"
   dump_hostedcluster
-  
+
   export GATHER_MCE_RAN=true
 fi

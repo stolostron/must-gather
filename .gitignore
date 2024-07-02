@@ -1,2 +1,3 @@
 .DS_Store
-.build-harness-bootstrap
+must-gather/
+kubeconfig
