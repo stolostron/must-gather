@@ -1,0 +1,4 @@
+@@ -1,7 +0,0 @@
+# Copyright Contributors to the Open Cluster Management project
+
+-include /opt/build-harness/Makefile.prow
