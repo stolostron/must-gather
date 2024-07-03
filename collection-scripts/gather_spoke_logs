@@ -62,6 +62,7 @@ then
     oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect configurationpolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    oc adm inspect operatorpolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
 
