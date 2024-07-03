@@ -77,3 +77,6 @@ Data from the hosted cluster:
 
 **Note:** The hosted cluster data collection does not contain any secret resources from the cluster, only references to the secret's names.
 
+<!---
+Date: 07/03/2024
+-->
