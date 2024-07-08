@@ -77,6 +77,27 @@ Data from the hosted cluster:
 
 **Note:** The hosted cluster data collection does not contain any secret resources from the cluster, only references to the secret's names.
 
+### Development
+
+You can run the scripts against the currently configured cluster with output to `./must-gather/` by running:
+
+```sh
+make run
+```
+
+You can also build and run the image locally:
+
+```sh
+make build-image
+make run-image
+```
+
+Or, as a convenience:
+
+```sh
+make build-and-run-image
+```
+
 <!---
 Date: 07/03/2024
 -->
