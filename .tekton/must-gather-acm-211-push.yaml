@@ -103,9 +103,7 @@ spec:
         name: java
         type: string
       - default: ""
-        description:
-          Image tag expiration time, time values could be something like 1h, 2d, 3w for hours, days, and weeks,
-          respectively.
+        description: Image tag expiration time, time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.
         name: image-expires-after
       - default: "false"
         description: Build a source image.
@@ -116,8 +114,7 @@ spec:
         name: build-args
         type: array
       - default: ""
-        description:
-          Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
+        description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
         name: build-args-file
         type: string
     results:
@@ -250,8 +247,6 @@ spec:
         params:
           - name: BINARY_IMAGE
             value: $(params.output-image)
-          - name: BASE_IMAGES
-            value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
         runAfter:
           - build-container
         taskRef:
@@ -277,8 +272,6 @@ spec:
             workspace: workspace
       - name: deprecated-base-image-check
         params:
-          - name: BASE_IMAGES_DIGESTS
-            value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
           - name: IMAGE_URL
             value: $(tasks.build-container.results.IMAGE_URL)
           - name: IMAGE_DIGEST
