@@ -36,4 +36,4 @@ IMAGE_NAME_AND_VERSION ?= $(REGISTRY)/$(IMG)
 
 .PHONY: build-image
 build-image:
-	$(CONTAINER_ENGINE) build --platform linux/amd64 -t $(IMAGE_NAME_AND_VERSION):$(TAG) -f Dockerfile
+	$(CONTAINER_ENGINE) build --platform linux/amd64 -t $(IMAGE_NAME_AND_VERSION):$(TAG) -f build/Dockerfile

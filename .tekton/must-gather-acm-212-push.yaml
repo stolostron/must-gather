@@ -23,7 +23,7 @@ spec:
     - name: output-image
       value: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/release-acm-212/must-gather-acm-212:{{revision}}
     - name: dockerfile
-      value: Dockerfile.rhtap
+      value: build/Dockerfile.rhtap
     - name: path-context
       value: .
   pipelineSpec:
