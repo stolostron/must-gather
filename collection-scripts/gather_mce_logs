@@ -274,6 +274,9 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect infraenv.agent-install.openshift.io --all-namespaces
     run_inspect nmstateconfig.agent-install.openshift.io --all-namespaces
 
+    # Image Based Install Operator CRs
+    run_inspect imageclusterinstall.extensions.hive.openshift.io --all-namespaces
+
     # OpenShift console plug-in enablement
     run_inspect consoles.operator.openshift.io
 
