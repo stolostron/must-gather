@@ -24,6 +24,7 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
   oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy.log
   run_inspect multiclusterhubs.operator.open-cluster-management.io --all-namespaces
+  run_inspect internalhubcomponents.operator.open-cluster-management.io --all-namespaces
   run_inspect klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces
   run_inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
   run_inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
