@@ -42,6 +42,9 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect restores.velero.io --all-namespaces
   run_inspect ansiblejobs.tower.ansible.com --all-namespaces
 
+  # SiteConfig Operator CRs
+  run_inspect clusterinstances.siteconfig.open-cluster-management.io --all-namespaces
+
   # Submariner Addon CRs
   run_inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces
   run_inspect brokers.submariner.io --all-namespaces
