@@ -3,6 +3,6 @@
   "dockerfile": {
     "fileMatch": ["build/Dockerfile.rhtap"]
   },
-  "schedule": ["every weekend"],
+  "schedule": "before 8am on Monday",
   "timezone": "America/New_York"
 }
