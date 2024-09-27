@@ -73,6 +73,7 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
 
   # Multicluster Global Hub Agent information
   run_inspect ns/multicluster-global-hub-agent
+  run_inspect ns/open-cluster-management-global-hub-agent-addon
 
   # Get disconneted information
   run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
