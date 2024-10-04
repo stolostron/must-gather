@@ -74,6 +74,7 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   run_inspect ns/openshift-operators # gatekeeper and volsync operator will be installed in this ns in production
   run_inspect ns/openshift-gatekeeper-system
   run_inspect ns/openshift-gatekeeper-operator
+  run_inspect ns/open-cluster-management-policies
 
   # Submariner logs
   run_inspect ns/submariner-operator

@@ -16,3 +16,4 @@ run_inspect policies.policy.open-cluster-management.io --all-namespaces
 run_inspect policysets.policy.open-cluster-management.io --all-namespaces
 run_inspect policyautomations.policy.open-cluster-management.io --all-namespaces
 run_inspect placementbindings.policy.open-cluster-management.io --all-namespaces
+run_inspect policyreport.wgpolicyk8s.io --all-namespaces
