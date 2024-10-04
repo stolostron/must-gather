@@ -10,3 +10,4 @@ oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --de
 oc adm inspect policysets.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 oc adm inspect policyautomations.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 oc adm inspect placementbindings.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+oc adm inspect policyreport.wgpolicyk8s.io --all-namespaces  --dest-dir=must-gather
