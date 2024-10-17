@@ -65,6 +65,11 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   run_inspect configurationpolicies.policy.open-cluster-management.io --all-namespaces
   run_inspect operatorpolicies.policy.open-cluster-management.io --all-namespaces
 
+  log "Starting Gatekeeper must-gather"
+  for i in $(oc get crds -o custom-columns=NAME:.metadata.name | grep '\.gatekeeper\.sh$'); do
+    run_inspect "$i" --all-namespaces
+  done
+
   run_inspect ns/open-cluster-management-addon-observability
 
   # VolSync CRs
