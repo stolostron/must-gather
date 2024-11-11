@@ -1,7 +1,7 @@
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-FROM quay.io/openshift/origin-cli:4.17 as builder
+FROM quay.io/openshift/origin-cli:4.18 as builder
 
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd64 -O /usr/bin/yq && \
     chmod +x /usr/bin/yq
