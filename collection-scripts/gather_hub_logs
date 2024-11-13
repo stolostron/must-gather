@@ -28,6 +28,7 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces
   run_inspect validatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
   run_inspect mutatingwebhookconfigurations.admissionregistration.k8s.io --all-namespaces
+  run_inspect clustermanagementaddons.addon.open-cluster-management.io --all-namespaces
   run_inspect managedclusteraddons.addon.open-cluster-management.io --all-namespaces
   run_inspect managedproxyconfigurations.proxy.open-cluster-management.io
   run_inspect managedproxyserviceresolvers.proxy.open-cluster-management.io
