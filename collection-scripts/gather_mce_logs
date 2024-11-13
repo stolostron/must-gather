@@ -258,6 +258,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect discoveryconfigs.discovery.open-cluster-management.io --all-namespaces
     run_inspect discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces
 
+    run_inspect clustermanagementaddons.addon.open-cluster-management.io --all-namespaces
     run_inspect managedclusteraddons.addon.open-cluster-management.io --all-namespaces
 
     run_inspect ns/openshift-monitoring
