@@ -179,6 +179,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
   gather_hub() {
     check_managed_clusters
+    run_inspect customresourcedefinition.apiextensions.k8s.io
 
     if [[ -z "$MCE_NAME" ]]; then
       MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
