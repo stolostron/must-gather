@@ -1,7 +1,7 @@
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-FROM registry.redhat.io/openshift4/ose-cli-rhel9:v4.17 as builder
+FROM registry.redhat.io/openshift4/ose-cli-rhel9:v4.18 as builder
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
