@@ -5,6 +5,7 @@
 .PHONY: clean
 clean:
 	-rm -rf must-gather/
+	-rm kubeconfig
 
 ############################################################
 # run section
@@ -14,10 +15,12 @@ clean:
 run: clean
 	./collection-scripts/gather
 
-.PHONY: run-image
-run-image:
-	-mkdir must-gather/
+kubeconfig:
 	oc config view --minify --raw > kubeconfig
+
+.PHONY: run-image
+run-image: kubeconfig
+	-mkdir must-gather/
 	${CONTAINER_ENGINE} run -v $(PWD)/kubeconfig:/kube/config --env KUBECONFIG=/kube/config \
 		-v $(PWD)/must-gather:/must-gather $(IMAGE_NAME_AND_VERSION):$(TAG)
 
@@ -36,4 +39,4 @@ IMAGE_NAME_AND_VERSION ?= $(REGISTRY)/$(IMG)
 
 .PHONY: build-image
 build-image:
-	$(CONTAINER_ENGINE) build --platform linux/amd64 -t $(IMAGE_NAME_AND_VERSION):$(TAG) -f build/Dockerfile
+	$(CONTAINER_ENGINE) build --platform linux/amd64 -t $(IMAGE_NAME_AND_VERSION):$(TAG) -f build/Dockerfile .

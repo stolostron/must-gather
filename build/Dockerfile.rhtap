@@ -21,10 +21,10 @@ COPY --from=builder /usr/bin/oc /usr/bin/oc
 COPY --from=builder /usr/bin/yq /usr/bin/yq
 
 # copy all collection scripts to /usr/bin
-COPY collection-scripts/* /usr/bin/
+COPY ./collection-scripts/* /usr/bin/
 
 # Setup non-root user
-COPY build/user_setup /usr/local/bin/
+COPY ./build/user_setup /usr/local/bin/
 RUN  /usr/local/bin/user_setup
 USER 1001
 
