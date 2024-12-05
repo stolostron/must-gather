@@ -56,15 +56,15 @@ if $MCE_CLUSTER; then
   if $HUB_CLUSTER; then
     # NOTE: The `gather_all_logs` script includes `gather_mce_logs`
     log "Running ACM MultiClusterHub Must-Gather"
-    ${SCRIPT_DIR}/gather_all_logs
+    ${SCRIPT_DIR}/gather_all_logs "$@"
   else
     log "Running MulticlusterEngine Must-Gather"
-    ${SCRIPT_DIR}/gather_mce_logs
+    ${SCRIPT_DIR}/gather_mce_logs "$@"
   fi
 fi
 
 if $SPOKE_CLUSTER; then
-  ${SCRIPT_DIR}/gather_spoke_logs
+  ${SCRIPT_DIR}/gather_spoke_logs "$@"
 fi
 
 log "ACM must-gather complete."
