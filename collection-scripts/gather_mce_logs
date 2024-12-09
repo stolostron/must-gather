@@ -23,8 +23,8 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
   # Set a file path for the gather managed clusters.
   MANAGED_CLUSTER_FILE_PATH=${BASE_COLLECTION_PATH}/gather-managed.log
 
-  HC_NAME=""
-  HC_NAMESPACE="clusters" # default hosted cluster namespace
+  HC_NAME=${HC_NAME:-""}
+  HC_NAMESPACE=${HC_NAMESPACE:-"clusters"}
 
   check_managed_clusters() {
     touch $MANAGED_CLUSTER_FILE_PATH
@@ -40,27 +40,6 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     for mcns in ${mc_namespaces}; do
       run_inspect ns/"$mcns"
-    done
-  }
-
-  check_if_hypershift() {
-    # get the hosted cluster name and optionally namespace
-    while [ "$1" != "" ]; do
-      FLAG=$(echo "$1" | awk -F= '{print $1}')
-      VALUE=$(echo "$1" | awk -F= '{print $2}')
-      case $FLAG in
-      hosted-cluster-name)
-        HC_NAME=$VALUE
-        ;;
-      hosted-cluster-namespace)
-        HC_NAMESPACE=$VALUE
-        ;;
-      *)
-        log "ERROR" "unknown parameter \"$FLAG\""
-        exit 1
-        ;;
-      esac
-      shift
     done
   }
 
@@ -288,7 +267,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
   log "Starting MCE Hub cluster must-gather"
   gather_hub
-  check_if_hypershift "$@"
+  parse_args "$@"
   dump_hostedcluster
 
   export GATHER_MCE_RAN=true
