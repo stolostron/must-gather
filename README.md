@@ -1,7 +1,9 @@
 # Must Gather Script for Open Cluster Management
 
 The must gather script for Open Cluster Management allows a user to collect information about
-various key resources and namespaces that exist on your cluster.
+various key resources and namespaces that exist on your cluster. Scripts are shell scripts located
+in the [`collection-scripts/`](./collection-scripts/) directory. The default/root script is the
+[`gather`](./collection-scripts/gather) script.
 
 ## Usage
 
@@ -105,6 +107,9 @@ running:
 ```sh
 make run
 ```
+
+**NOTE:** This invokes the [`collection-scripts/gather`](./collection-scripts/gather) script. Each
+of the sub-scripts can alternatively be invoked individually.
 
 You can also build and run the image locally:
 
