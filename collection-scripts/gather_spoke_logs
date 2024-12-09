@@ -21,7 +21,7 @@ gather_spoke() {
     mode=$(oc get "$name" -o jsonpath='{.spec.deployOption.mode}')
     log "klusterlet $name is deployed in $mode mode"
     if [ "$mode" = 'Hosted' ] || [ "$mode" = 'SingletonHosted' ]; then
-      agent_namespace=$name
+      agent_namespace=$(oc get "$name" -o jsonpath='{.metadata.name}')
     else
       agent_namespace=$(oc get "$name" -o jsonpath='{.spec.namespace}')
     fi
@@ -42,6 +42,8 @@ gather_spoke() {
 
 log "Starting Managed cluster must-gather"
 gather_spoke
+check_if_hypershift "$@"
+dump_hostedcluster
 
 if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   log "Gathering spoke information for ACM"
@@ -90,3 +92,4 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   # Version info
   run_inspect clusterversions
 fi
+  
