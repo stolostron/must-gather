@@ -21,7 +21,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
   fi
 
   # Set a file path for the gather managed clusters.
-  MANAGED_CLUSTER_FILE_PATH=$BASE_COLLECTION_PATH/gather-managed.log
+  MANAGED_CLUSTER_FILE_PATH=${BASE_COLLECTION_PATH}/gather-managed.log
 
   HC_NAME=""
   HC_NAMESPACE="clusters" # default hosted cluster namespace

@@ -18,11 +18,11 @@ export GATHER_HUB_RAN=false
 
 check_if_engine() {
   MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-  if [[ -n "$MCE_NAME" ]]; then
-    log "Detected MCE resource: \"$MCE_NAME\" on current cluster. This cluster has been verified as an engine cluster."
+  if [[ -n "${MCE_NAME}" ]]; then
+    log "Detected MCE resource: \"${MCE_NAME}\" on current cluster. This cluster has been verified as an engine cluster."
     MCE_CLUSTER=true
     OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
-    DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
+    DEPLOYMENT_NAMESPACE=$(oc get mce "${MCE_NAME}" -o jsonpath='{.spec.targetNamespace}')
   else
     log "No MCE resource detected on the current cluster. This is not an engine cluster (Previous errors can be safely ignored)."
   fi
@@ -51,9 +51,9 @@ check_if_spoke() {
 check_if_engine
 check_if_spoke
 
-if $MCE_CLUSTER; then
+if ${MCE_CLUSTER}; then
   check_if_hub
-  if $HUB_CLUSTER; then
+  if ${HUB_CLUSTER}; then
     # NOTE: The `gather_all_logs` script includes `gather_mce_logs`
     log "Running ACM MultiClusterHub Must-Gather"
     ${SCRIPT_DIR}/gather_all_logs
@@ -63,7 +63,7 @@ if $MCE_CLUSTER; then
   fi
 fi
 
-if $SPOKE_CLUSTER; then
+if ${SPOKE_CLUSTER}; then
   ${SCRIPT_DIR}/gather_spoke_logs
 fi
 
