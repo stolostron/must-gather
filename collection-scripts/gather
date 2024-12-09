@@ -15,6 +15,10 @@ export OPERATOR_NAMESPACE=""
 export DEPLOYMENT_NAMESPACE=""
 export GATHER_MCE_RAN=false
 export GATHER_HUB_RAN=false
+export HC_NAME=""
+export HC_NAMESPACE="clusters" # default hosted cluster namespace
+
+parse_args "$@"
 
 check_if_engine() {
   MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
