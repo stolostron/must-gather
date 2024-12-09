@@ -30,3 +30,27 @@ run_inspect() {
   # - BASE_COLLECTION_PATH can't be quoted because `oc` reads the quotes as part of the path
   oc adm inspect --dest-dir=${BASE_COLLECTION_PATH} "$@"
 }
+
+# parse_args parses the arguments passed to the must-gather in the form of <key>=<value>.
+# NOTE: Currently this only applies to the Hypershift must-gather.
+parse_args() {
+  # get the hosted cluster name and optionally namespace
+  while [ "${1}" != "" ]; do
+    local key value
+    key=${1%=*}
+    value=${1#*=}
+    case ${key} in
+    hosted-cluster-name) # Get the hosted cluster name
+      export HC_NAME=${value}
+      ;;
+    hosted-cluster-namespace) # Get the hosted cluster namespace
+      export HC_NAMESPACE=${value}
+      ;;
+    *)
+      log "ERROR" "unknown parameter \"${key}\""
+      exit 1
+      ;;
+    esac
+    shift
+  done
+}
