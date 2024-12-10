@@ -50,8 +50,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     fi
 
     # Get a running hypershift operator pod
-    oc project hypershift
-    HO_POD_NAME=$(oc get pod --no-headers=true --field-selector=status.phase=Running -l app=operator -o custom-columns="NAME:.metadata.name" | head -n 1)
+    HO_POD_NAME=$(oc get pod -n hypershift --no-headers=true --field-selector=status.phase=Running -l app=operator -o custom-columns="NAME:.metadata.name" | head -n 1)
 
     if [[ -n $HO_POD_NAME ]]; then
       log "Found a running hypershift operator pod: \"$HO_POD_NAME\""
@@ -61,8 +60,9 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     fi
 
     # Extract the hypershift CLI from the hypershift operator pod
-    oc rsync ${HO_POD_NAME}:/usr/bin/hypershift /tmp
+    oc rsync -n hypershift -c operator --strategy tar ${HO_POD_NAME}:/usr/bin/hypershift /tmp
     chmod 755 /tmp/hypershift
+
     return 0
   }
 
