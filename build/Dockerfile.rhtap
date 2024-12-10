@@ -13,7 +13,7 @@ ENV BASE_COLLECTION_PATH=/must-gather \
     USER_NAME=must-gather
 
 RUN microdnf update -y \
-    && microdnf install -y rsync findutils \
+    && microdnf install -y tar gzip rsync findutils \
     && microdnf clean all
 
 # Copy binaries
