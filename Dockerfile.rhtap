@@ -9,7 +9,7 @@ RUN wget https://github.com/mikefarah/yq/releases/download/v4.44.2/yq_linux_amd6
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 RUN microdnf update -y \
-    && microdnf install -y rsync findutils \
+    && microdnf install -y tar gzip rsync findutils \
     && microdnf clean all
 
 # Copy binaries
