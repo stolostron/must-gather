@@ -12,9 +12,7 @@ ENV BASE_COLLECTION_PATH=/must-gather \
     USER_UID=1001 \
     USER_NAME=must-gather
 
-RUN microdnf update -y \
-    && microdnf install -y tar gzip rsync findutils \
-    && microdnf clean all
+RUN microdnf install -y tar gzip rsync findutils
 
 # Copy binaries
 COPY --from=builder /usr/bin/oc /usr/bin/oc
@@ -29,3 +27,11 @@ RUN  /usr/local/bin/user_setup
 USER 1001
 
 ENTRYPOINT /usr/bin/gather
+
+LABEL name="rhacm2/acm-must-gather-rhel9"
+LABEL summary="Must-gather scripts for Red Hat Advanced Cluster Management"
+LABEL description="Must-gather scripts for Red Hat Advanced Cluster Management"
+LABEL io.k8s.display-name="ACM Must-gather"
+LABEL io.k8s.description="Must-gather scripts for Red Hat Advanced Cluster Management"
+LABEL com.redhat.component="acm-must-gather-container"
+LABEL io.openshift.tags="data,images"
