@@ -2,6 +2,7 @@ contentOrigin:
   repofiles:
     - /etc/yum.repos.d/ubi.repo
 packages:
+  - jq
   - tar
   - gzip
   - rsync

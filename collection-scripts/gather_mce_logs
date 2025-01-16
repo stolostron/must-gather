@@ -134,24 +134,29 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
   }
 
   gather_service_and_event_logs_for_failed_agents() {
-    GATHER_DIR="$1"
-    find ${GATHER_DIR} -path '*/agentclusterinstalls/*.yaml' -type f | while read -r file; do
-      dir=$(dirname $file)
-      base=$(basename -s .yaml $file)
+    gather_dir=${1}
+    agent_cluster_install_list=$(oc get agentclusterinstalls.extensions.hive.openshift.io --all-namespaces -o json)
+    total_installs=$(echo "${agent_cluster_install_list}" | jq '.items | length' )
 
-      failed=$(yq eval '.status.conditions[] | select(.type == "Failed") | .status' $file)
+    for idx in $(seq 0 $((total_installs - 1))); do
+      install_json=$(echo "${agent_cluster_install_list}" | jq '.items['${idx}']')
+      install_name=$(echo "${install_json}" | jq -r '.metadata.name')
+      install_namespace=$(echo "${install_json}" | jq -r '.metadata.namespace')
+      dir=${gather_dir}/namespaces/${install_namespace}/extensions.hive.openshift.io/agentclusterinstalls
+
+      failed=$(echo "${install_json}" | jq -r '.status.conditions[] | select(.type == "Failed") | .status')
       if [ "$failed" = "False" ]; then
-        log "skipping logs and events for non-failed cluster $file"
+        log "skipping logs and events for non-failed cluster ${install_name}"
         continue
       fi
 
-      logsURL=$(yq eval '.status.debugInfo.logsURL' $file)
+      logsURL=$(echo "${install_json}" | jq -r '.status.debugInfo.logsURL')
       if [ -n "${logsURL}" ]; then
-        curl -k -o $dir/$base.logs.tar "${logsURL}"
+        curl -k -o ${dir}/${install_name}.logs.tar "${logsURL}"
       fi
-      eventsURL=$(yq eval '.status.debugInfo.eventsURL' $file)
+      eventsURL=$(echo "${install_json}" | jq -r '.status.debugInfo.eventsURL')
       if [ -n "${eventsURL}" ]; then
-        curl -k -o $dir/$base.events "${eventsURL}"
+        curl -k -o ${dir}/${install_name}.events "${eventsURL}"
       fi
     done
   }
