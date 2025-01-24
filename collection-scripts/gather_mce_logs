@@ -209,9 +209,11 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect hiveconfigs.hive.openshift.io --all-namespaces
 
     run_inspect clusterserviceversions.operators.coreos.com --all-namespaces
+    run_inspect catalogsources.operators.coreos.com --all-namespaces
     run_inspect subscriptions.operators.coreos.com --all-namespaces
     run_inspect installplans.operators.coreos.com --all-namespaces
     run_inspect operatorgroups.operators.coreos.com --all-namespaces
+    run_inspect clusterversions.config.openshift.io --all-namespaces
 
     run_inspect baremetalhosts.metal3.io --all-namespaces
     run_inspect preprovisioningimages.metal3.io --all-namespaces
