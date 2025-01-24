@@ -202,6 +202,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect ns/open-cluster-management-hub
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
     oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy-mce.log
+    run_inspect customresourcedefinition.apiextensions.k8s.io
     run_inspect ns/hive
     run_inspect multiclusterengines.multicluster.openshift.io --all-namespaces
     run_inspect internalenginecomponents.multicluster.openshift.io --all-namespaces
@@ -213,6 +214,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect operatorgroups.operators.coreos.com --all-namespaces
 
     run_inspect baremetalhosts.metal3.io --all-namespaces
+    run_inspect preprovisioningimages.metal3.io --all-namespaces
 
     run_inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces
     run_inspect placements.cluster.open-cluster-management.io --all-namespaces
@@ -245,8 +247,13 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     run_inspect clustermanagementaddons.addon.open-cluster-management.io --all-namespaces
     run_inspect managedclusteraddons.addon.open-cluster-management.io --all-namespaces
+    run_inspect addondeploymentconfigs.addon.open-cluster-management.io --all-namespaces
+    run_inspect addontemplates.addon.open-cluster-management.io --all-namespaces
+
+    run_inspect klusterletconfigs.config.open-cluster-management.io --all-namespaces
 
     run_inspect ns/openshift-monitoring
+    run_inspect imagecontentsourcepolicies.operator.openshift.io
 
     # Topology Aware Lifecycle Manager CRs
     run_inspect ns/openshift-operators
@@ -263,6 +270,12 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     # Image Based Install Operator CRs
     run_inspect imageclusterinstall.extensions.hive.openshift.io --all-namespaces
+
+    # Cluster API (CAPI) CRs
+    run_inspect clusters.cluster.x-k8s.io --all-namespaces
+    run_inspect machinepools.cluster.x-k8s.io --all-namespaces
+    run_inspect rosacontrolplanes.controlplane.cluster.x-k8s.io --all-namespaces
+    run_inspect rosamachinepools.infrastructure.cluster.x-k8s.io --all-namespaces
 
     # OpenShift console plug-in enablement
     run_inspect consoles.operator.openshift.io
