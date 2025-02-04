@@ -24,7 +24,7 @@ RUN microdnf update -y \
 # Copy binaries
 COPY --from=builder /usr/bin/oc /usr/bin/oc
 COPY --from=builder /usr/bin/yq /usr/bin/yq
-COPY --from=hcpcli-builder /hypershift/bin/hypershift /usr/bin/hypershift
+COPY --from=hcpcli-builder /hypershift/bin/hypershift /usr/bin/hypershift-local
 
 # copy all collection scripts to /usr/bin
 COPY collection-scripts/* /usr/bin/
