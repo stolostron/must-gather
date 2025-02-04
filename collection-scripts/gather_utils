@@ -31,6 +31,59 @@ run_inspect() {
   oc adm inspect --dest-dir=${BASE_COLLECTION_PATH} "$@"
 }
 
+ensure_hypershift_cli() {
+  # First, check if the container image already contains the /usr/bin/hypershift
+  if [ -f /usr/bin/hypershift ]; then
+    log "/usr/bin/hypershift already exists."
+    chmod 755 /tmp/hypershift
+    return 0
+  fi
+
+  log "/usr/bin/hypershift is not found. Trying to extract it from the hypershift operator."
+
+  # Now, try to extract the hypershift CLI from the hypershift operator
+  if extract_hypershift_cli; then
+    log "Successfully extracted the hypershift CLI binary."
+    chmod 755 /tmp/hypershift
+    return 0
+  fi
+
+  log "Extracting the hypershift binary from the hypershift operator failed."
+
+  # Last, use the /usr/bin/hypershift-local
+  if [ -f /usr/bin/hypershift-local ]; then
+    log "Using the /usr/bin/hypershift-local file."
+    mv /usr/bin/hypershift-local /usr/bin/hypershift
+    chmod 755 /tmp/hypershift
+    return 0
+  fi
+
+  return 1
+}
+
+extract_hypershift_cli() {
+  if ! oc get namespace hypershift; then
+    log "hypershift namespace not found"
+    return 1
+  fi
+
+  # Get a running hypershift operator pod
+  oc project hypershift
+  HO_POD_NAME=$(oc get pod --no-headers=true --field-selector=status.phase=Running -l app=operator -o custom-columns="NAME:.metadata.name" | head -n 1)
+
+  if [[ -n $HO_POD_NAME ]]; then
+    log "Found a running hypershift operator pod: \"$HO_POD_NAME\""
+  else
+    log "WARN" "No running hypershift operator pod found."
+    return 1
+  fi
+
+  # Extract the hypershift CLI from the hypershift operator pod
+  oc rsync ${HO_POD_NAME}:/usr/bin/hypershift /tmp
+  chmod 755 /tmp/hypershift
+  return 0
+}
+
 check_if_hypershift() {
   # get the hosted cluster name and optionally namespace
   while [ "$1" != "" ]; do
@@ -64,33 +117,38 @@ dump_hostedcluster() {
     return 1
   fi
 
+  if ! ensure_hypershift_cli; then
+    log "ERROR" "Failed to find the hypershift CLI binary."
+    return 1
+  fi
+
   log "Collecting must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\""
   log "--archive-dump false"
   hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $HC_NAME --namespace $HC_NAMESPACE
 }
 
-  # This is not supported yet
-  gather_all_hostedclusters() {
-    run_inspect pod -n open-cluster-management-agent-addon
-    run_inspect pod -n hypershift
+# This is not supported yet
+gather_all_hostedclusters() {
+  run_inspect pod -n open-cluster-management-agent-addon
+  run_inspect pod -n hypershift
 
-    HC_NAMESPACES=$(oc get hostedcluster --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+  HC_NAMESPACES=$(oc get hostedcluster --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
 
-    if [[ -n $HC_NAMESPACES ]]; then
-      for hc_namespace in ${HC_NAMESPACES}; do
-        HC_LIST=$(oc get hostedcluster -n $hc_namespace --no-headers=true -o custom-columns="NAME:.metadata.name")
-        if [[ -n $HC_LIST ]]; then
-          for hc in ${HC_LIST}; do
-            log "Collecting must-gather for hosted cluster $hc"
-            hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $hc --namespace $hc_namespace
-          done
-        else
-          log "No hosted cluster found in $hc_namespace namespace."
-          return
-        fi
-      done
-    else
-      log "No hosted cluster found."
-      return
-    fi
-  }
+  if [[ -n $HC_NAMESPACES ]]; then
+    for hc_namespace in ${HC_NAMESPACES}; do
+      HC_LIST=$(oc get hostedcluster -n $hc_namespace --no-headers=true -o custom-columns="NAME:.metadata.name")
+      if [[ -n $HC_LIST ]]; then
+        for hc in ${HC_LIST}; do
+          log "Collecting must-gather for hosted cluster $hc"
+          hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $hc --namespace $hc_namespace
+        done
+      else
+        log "No hosted cluster found in $hc_namespace namespace."
+        return
+      fi
+    done
+  else
+    log "No hosted cluster found."
+    return
+  fi
+}

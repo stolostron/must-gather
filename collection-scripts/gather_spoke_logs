@@ -92,4 +92,3 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   # Version info
   run_inspect clusterversions
 fi
-  
