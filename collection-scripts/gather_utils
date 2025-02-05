@@ -54,3 +54,94 @@ parse_args() {
     shift
   done
 }
+
+ensure_hypershift_cli() {
+  # First, check if the container image already contains the /usr/bin/hypershift
+  if [ -f /usr/bin/hypershift ]; then
+    log "Using hypershift binary at /usr/bin/hypershift."
+    export HYPERSHIFT="/usr/bin/hypershift"
+    return 0
+  fi
+
+  log "/usr/bin/hypershift is not found. Trying to extract it from the hypershift operator."
+
+  # Now, try to extract the hypershift CLI from the hypershift operator
+  if extract_hypershift_cli; then
+    log "Successfully extracted the hypershift CLI binary to /tmp/hypershift."
+    export HYPERSHIFT="/tmp/hypershift"
+    chmod 755 /tmp/hypershift
+    return 0
+  fi
+
+  log "Extracting the hypershift binary from the hypershift operator failed."
+  return 1
+}
+
+extract_hypershift_cli() {
+  if ! oc get namespace hypershift; then
+    log "hypershift namespace not found"
+    return 1
+  fi
+
+  # Get a running hypershift operator pod
+  HO_POD_NAME=$(oc get pod -n hypershift --no-headers=true --field-selector=status.phase=Running -l app=operator -o name | head -n 1)
+
+  if [[ -n $HO_POD_NAME ]]; then
+    log "Found a running hypershift operator pod: \"$HO_POD_NAME\""
+  else
+    log "WARN" "No running hypershift operator pod found."
+    return 1
+  fi
+
+  # Extract the hypershift CLI from the hypershift operator pod
+  oc rsync -c operator ${HO_POD_NAME}:/usr/bin/hypershift /tmp
+  chmod 755 /tmp/hypershift
+  return 0
+}
+
+dump_hostedcluster() {
+  if [[ -z $HC_NAME ]]; then
+    log "Hosted cluster name was not provided. Skip collecting hosted cluster must-gather."
+    return 0
+  fi
+
+  HC=$(oc get hostedcluster $HC_NAME -n $HC_NAMESPACE)
+  if [[ -z $HC ]]; then
+    log "ERROR" "hosted cluster \"$HC_NAME\" not found in \"$HC_NAMESPACE\" namespace"
+    return 1
+  fi
+
+  if ! ensure_hypershift_cli; then
+    log "ERROR" "Failed to find the hypershift CLI binary."
+    return 1
+  fi
+
+  log "Collecting must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\""
+ ${HYPERSHIFT} dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $HC_NAME --namespace $HC_NAMESPACE
+}
+
+# This is not supported yet
+gather_all_hostedclusters() {
+  run_inspect pod -n open-cluster-management-agent-addon
+  run_inspect pod -n hypershift
+
+  HC_NAMESPACES=$(oc get hostedcluster --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+
+  if [[ -n $HC_NAMESPACES ]]; then
+    for hc_namespace in ${HC_NAMESPACES}; do
+      HC_LIST=$(oc get hostedcluster -n $hc_namespace --no-headers=true -o custom-columns="NAME:.metadata.name")
+      if [[ -n $HC_LIST ]]; then
+        for hc in ${HC_LIST}; do
+          log "Collecting must-gather for hosted cluster $hc"
+          hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $hc --namespace $hc_namespace
+        done
+      else
+        log "No hosted cluster found in $hc_namespace namespace."
+        return
+      fi
+    done
+  else
+    log "No hosted cluster found."
+    return
+  fi
+}
