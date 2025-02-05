@@ -5,6 +5,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source ${SCRIPT_DIR}/gather_utils
 
+HC_NAME=${HC_NAME:-""}
+HC_NAMESPACE=${HC_NAMESPACE:-"clusters"}
+
 gather_spoke() {
   # collect CRDs to aid automated must-gather readers
   log "Gathering spoke information for MCE"
@@ -42,6 +45,8 @@ gather_spoke() {
 
 log "Starting Managed cluster must-gather"
 gather_spoke
+parse_args "$@"
+dump_hostedcluster
 
 if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   log "Gathering spoke information for ACM"
