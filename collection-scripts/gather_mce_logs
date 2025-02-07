@@ -241,6 +241,7 @@ then
       oc adm inspect operatorgroups.operators.coreos.com --all-namespaces  --dest-dir=must-gather
   
       oc adm inspect baremetalhosts.metal3.io --all-namespaces  --dest-dir=must-gather
+      oc adm inspect preprovisioningimages.metal3.io --all-namespaces --dest-dir=must-gather
   
       oc adm inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
       oc adm inspect placements.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
@@ -273,8 +274,13 @@ then
       oc adm inspect  discoveryconfigs.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
       oc adm inspect  discoveredclusterrefreshes.discovery.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
   
+      oc adm inspect clustermanagementaddons.addon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
       oc adm inspect managedclusteraddons.addon.open-cluster-management.io  --all-namespaces  --dest-dir=must-gather
-  
+      oc adm inspect addondeploymentconfigs.addon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+      oc adm inspect addontemplates.addon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+
+      oc adm inspect klusterletconfigs.config.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+
       oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
   
       # Topology Aware Lifecycle Manager CRs
@@ -295,6 +301,11 @@ then
 
       # Gather any service or event logs for failed agents
       gather_service_and_event_logs_for_failed_agents must-gather
+
+      # Capture metal3 logs if the customer has at least one baremetalhost cr which indicates that bmc is being used to create new clusters
+      if oc get baremetalhosts.metal3.io --all-namespaces &> /dev/null; then
+        oc adm inspect ns/openshift-machine-api --dest-dir=$BASE_COLLECTION_PATH
+      fi
   }
 
   echo "Start to gather MCE information for hub"
