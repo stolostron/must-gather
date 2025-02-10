@@ -14,11 +14,15 @@ RUN microdnf install -y jq tar gzip rsync findutils
 # Copy binaries
 COPY --from=builder /usr/bin/oc /usr/bin/oc
 
+# Copy license
+RUN mkdir licenses/
+COPY LICENSE licenses/
+
 # copy all collection scripts to /usr/bin
-COPY collection-scripts/* /usr/bin/
+COPY ./collection-scripts/* /usr/bin/
 
 # Setup non-root user
-COPY build/user_setup /usr/local/bin/
+COPY ./build/user_setup /usr/local/bin/
 RUN  /usr/local/bin/user_setup
 USER 1001
 
