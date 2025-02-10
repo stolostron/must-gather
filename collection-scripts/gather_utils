@@ -117,31 +117,5 @@ dump_hostedcluster() {
   fi
 
   log "Collecting must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\""
- ${HYPERSHIFT} dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $HC_NAME --namespace $HC_NAMESPACE
-}
-
-# This is not supported yet
-gather_all_hostedclusters() {
-  run_inspect pod -n open-cluster-management-agent-addon
-  run_inspect pod -n hypershift
-
-  HC_NAMESPACES=$(oc get hostedcluster --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
-
-  if [[ -n $HC_NAMESPACES ]]; then
-    for hc_namespace in ${HC_NAMESPACES}; do
-      HC_LIST=$(oc get hostedcluster -n $hc_namespace --no-headers=true -o custom-columns="NAME:.metadata.name")
-      if [[ -n $HC_LIST ]]; then
-        for hc in ${HC_LIST}; do
-          log "Collecting must-gather for hosted cluster $hc"
-          hypershift dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $hc --namespace $hc_namespace
-        done
-      else
-        log "No hosted cluster found in $hc_namespace namespace."
-        return
-      fi
-    done
-  else
-    log "No hosted cluster found."
-    return
-  fi
+  ${HYPERSHIFT} dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $HC_NAME --namespace $HC_NAMESPACE
 }
