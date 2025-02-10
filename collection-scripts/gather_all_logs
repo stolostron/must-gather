@@ -8,7 +8,7 @@ source ${SCRIPT_DIR}/gather_utils
 # Store PIDs of all the subprocesses
 pids=()
 
-${SCRIPT_DIR}/gather_mce_logs "$@" &
+${SCRIPT_DIR}/gather_mce_logs &
 pids+=($!)
 
 ${SCRIPT_DIR}/gather_hub_logs &

@@ -117,7 +117,6 @@ dump_hostedcluster() {
   fi
 
   log "Collecting must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\""
-  log "--archive-dump false"
  ${HYPERSHIFT} dump cluster --dump-guest-cluster --artifact-dir $BASE_COLLECTION_PATH --name $HC_NAME --namespace $HC_NAMESPACE
 }
 
