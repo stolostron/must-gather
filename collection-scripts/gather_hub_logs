@@ -38,6 +38,7 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect ns/open-cluster-management-issuer
   run_inspect restores.cluster.open-cluster-management.io --all-namespaces
   run_inspect backupschedules.cluster.open-cluster-management.io --all-namespaces
+  run_inspect dataprotectionapplications.oadp.openshift.io --all-namespaces
   run_inspect backupstoragelocations.velero.io --all-namespaces
   run_inspect backups.velero.io --all-namespaces
   run_inspect restores.velero.io --all-namespaces
