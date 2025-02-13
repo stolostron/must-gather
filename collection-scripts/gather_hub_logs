@@ -30,12 +30,22 @@ then
   oc adm inspect searches.search.open-cluster-management.io --all-namespaces --dest-dir=must-gather
   oc adm inspect ns/openshift-monitoring  --dest-dir=must-gather
   oc adm inspect ns/open-cluster-management-issuer  --dest-dir=must-gather
-  oc adm inspect restores.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect backupschedules.cluster.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect backupstoragelocations.velero.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect backups.velero.io --all-namespaces  --dest-dir=must-gather
-  oc adm inspect restores.velero.io --all-namespaces  --dest-dir=must-gather
   oc adm inspect ansiblejobs.tower.ansible.com --all-namespaces  --dest-dir=must-gather
+
+  # Backup and Restore chart,  OADP Operator and Velero CRs
+  oc adm inspect restores.cluster.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect backupschedules.cluster.open-cluster-management.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect dataprotectionapplications.oadp.openshift.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect backupstoragelocations.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect backuprepositories.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect deletebackuprequests.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect downloadrequests.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect podvolumebackups.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect podvolumerestores.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect volumesnapshotlocations.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect schedules.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect backups.velero.io --all-namespaces --dest-dir=must-gather
+  oc adm inspect restores.velero.io --all-namespaces --dest-dir=must-gather
 
   # Submariner Addon CRs
   oc adm inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces --dest-dir=must-gather
