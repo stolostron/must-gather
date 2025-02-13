@@ -40,6 +40,12 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect backupschedules.cluster.open-cluster-management.io --all-namespaces
   run_inspect dataprotectionapplications.oadp.openshift.io --all-namespaces
   run_inspect backupstoragelocations.velero.io --all-namespaces
+  run_inspect backuprepositories.velero.io --all-namespaces
+  run_inspect deletebackuprequests.velero.io --all-namespaces
+  run_inspect downloadrequests.velero.io --all-namespaces
+  run_inspect podvolumebackups.velero.io --all-namespaces
+  run_inspect podvolumerestores.velero.io --all-namespaces
+  run_inspect volumesnapshotlocations.velero.io --all-namespaces
   run_inspect schedules.velero.io --all-namespaces
   run_inspect backups.velero.io --all-namespaces
   run_inspect restores.velero.io --all-namespaces
