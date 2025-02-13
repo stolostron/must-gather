@@ -36,6 +36,9 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect searches.search.open-cluster-management.io --all-namespaces
   run_inspect ns/openshift-monitoring
   run_inspect ns/open-cluster-management-issuer
+  run_inspect ansiblejobs.tower.ansible.com --all-namespaces
+
+  # Backup and Restore chart,  OADP Operator and Velero CRs
   run_inspect restores.cluster.open-cluster-management.io --all-namespaces
   run_inspect backupschedules.cluster.open-cluster-management.io --all-namespaces
   run_inspect dataprotectionapplications.oadp.openshift.io --all-namespaces
@@ -49,7 +52,6 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect schedules.velero.io --all-namespaces
   run_inspect backups.velero.io --all-namespaces
   run_inspect restores.velero.io --all-namespaces
-  run_inspect ansiblejobs.tower.ansible.com --all-namespaces
 
   # SiteConfig Operator CRs
   run_inspect clusterinstances.siteconfig.open-cluster-management.io --all-namespaces
