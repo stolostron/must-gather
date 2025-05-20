@@ -26,6 +26,7 @@ run_inspect subscriptionreports.apps.open-cluster-management.io --all-namespaces
 # gitops resources
 run_inspect gitopscluster.apps.open-cluster-management.io --all-namespaces
 run_inspect argocd.argoproj.io --all-namespaces
+run_inspect applications.argoproj.io --all-namespaces
 run_inspect applicationsets.argoproj.io --all-namespaces
 run_inspect managedclustersetbinding.cluster.open-cluster-management.io
 run_inspect managedclusterset.cluster.open-cluster-management.io
