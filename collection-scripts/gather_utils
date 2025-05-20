@@ -22,6 +22,16 @@ log() {
   printf "%s\tacm-must-gather\t%s\n" "${lvl}" "${msg}"
 }
 
+# print_header prints an underlined heading with a trailing newline
+print_with_header() {
+  header=${1}
+  content=${2}
+  # shellcheck disable=SC2001
+  underline=$(echo "${header}" | sed 's/./-/g')
+
+  printf "%s\n%s\n%s\n\n" "${header}" "${underline}" "${content}"
+}
+
 # run_inspect wraps `oc adm inspect` by logging the args and running it with common flags
 run_inspect() {
   args="$*"

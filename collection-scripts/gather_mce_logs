@@ -31,7 +31,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     log "The list of managed clusters that are configured on this hub:" 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
 
     # These calls will change with new API
-    oc get managedclusters --all-namespaces 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
+    oc get managedclusters.cluster.open-cluster-management.io --all-namespaces 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
 
     # to capture details in the managed cluster namespace to debug hive issues
     # refer https://github.com/open-cluster-management/backlog/issues/2682
