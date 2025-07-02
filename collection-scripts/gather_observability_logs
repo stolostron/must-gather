@@ -18,4 +18,9 @@ if [[ -n "$MCO_NAME" ]]; then
     run_inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces
     run_inspect ns/open-cluster-management-observability
     run_inspect observatoria.core.observatorium.io --all-namespaces
+    # user workload metrics config
+    run_inspect configmap/observability-metrics-custom-allowlist --all-namespaces
+    # Cluster and user workload monitoring config for alert forwarding
+    run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
+    run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
 fi

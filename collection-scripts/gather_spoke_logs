@@ -75,7 +75,10 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
     run_inspect "$i" --all-namespaces
   done
 
+  # Observability CRs
   run_inspect ns/open-cluster-management-addon-observability
+  run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
+  run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
 
   # VolSync CRs
   run_inspect replicationdestinations.volsync.backube --all-namespaces
