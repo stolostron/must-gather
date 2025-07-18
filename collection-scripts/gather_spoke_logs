@@ -75,7 +75,18 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
     run_inspect "$i" --all-namespaces
   done
 
+  # Observability CRs
   run_inspect ns/open-cluster-management-addon-observability
+  # user workload metrics config - collect observability-metrics-custom-allowlist across all namespaces
+  OBSERVABILITY_NAMESPACES=$(oc get configmap --all-namespaces --field-selector=metadata.name=observability-metrics-custom-allowlist -o jsonpath='{.items[*].metadata.namespace}')
+  for namespace in ${OBSERVABILITY_NAMESPACES}; do
+    run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
+  done
+
+  # Cluster and user workload monitoring config for alert forwarding
+  run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
+  run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
+
 
   # VolSync CRs
   run_inspect replicationdestinations.volsync.backube --all-namespaces
