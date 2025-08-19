@@ -27,13 +27,15 @@ spec:
     - name: path-context
       value: .
     - name: dockerfile
-      value: Dockerfile
+      value: build/Dockerfile.rhtap
     - name: hermetic
-      value: 'false'
+      value: 'true'
+    - name: prefetch-input
+      value: '[{"type": "rpm", "path": "build"}]'
     - name: image-expires-after
       value: 5d
     - name: build-source-image
-      value: 'false'
+      value: 'true'
     - name: build-platforms
       value:
         - linux/x86_64
