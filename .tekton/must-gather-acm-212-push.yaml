@@ -25,12 +25,14 @@ spec:
       value: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/release-acm-212/must-gather-acm-212:{{revision}}
     - name: path-context
       value: .
-    - name: hermetic
-      value: 'false'
     - name: dockerfile
-      value: Dockerfile
+      value: build/Dockerfile.rhtap
+    - name: hermetic
+      value: 'true'
+    - name: prefetch-input
+      value: '[{"type": "rpm", "path": "build"}]'
     - name: build-source-image
-      value: 'false'
+      value: 'true'
     - name: build-platforms
       value:
         - linux/x86_64
