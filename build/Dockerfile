@@ -1,7 +1,7 @@
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-FROM quay.io/openshift/origin-cli:4.20 as builder
+FROM quay.io/openshift/origin-cli:4.21 as builder
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
