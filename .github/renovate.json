@@ -1,7 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "dockerfile": {
-    "fileMatch": ["build/Dockerfile.rhtap"]
+    "managerFilePatterns": [
+      "/build/Dockerfile.rhtap/"
+    ]
   },
   "schedule": "before 8am on Monday",
   "timezone": "America/New_York"
