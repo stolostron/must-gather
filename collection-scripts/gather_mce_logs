@@ -185,9 +185,28 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     # Cluster API (CAPI) CRs
     run_inspect clusters.cluster.x-k8s.io --all-namespaces
+    run_inspect clusterclasses.cluster.x-k8s.io --all-namespaces
+    run_inspect machinedeployments.cluster.x-k8s.io --all-namespaces
+    run_inspect machines.cluster.x-k8s.io --all-namespaces
     run_inspect machinepools.cluster.x-k8s.io --all-namespaces
     run_inspect rosacontrolplanes.controlplane.cluster.x-k8s.io --all-namespaces
     run_inspect rosamachinepools.infrastructure.cluster.x-k8s.io --all-namespaces
+
+    # CAPM3 CRs
+    run_inspect metal3clusters.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3clustertemplates.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3dataclaims.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3datas.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3datatemplates.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3machines.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3machinetemplates.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3remediations.infrastructure.cluster.x-k8s.io --all-namespaces
+    run_inspect metal3remediationtemplates.infrastructure.cluster.x-k8s.io --all-namespaces
+
+    # CAPOA CRs
+    run_inspect openshiftassistedconfigs.bootstrap.cluster.x-k8s.io --all-namespaces
+    run_inspect openshiftassistedconfigtemplates.bootstrap.cluster.x-k8s.io --all-namespaces
+    run_inspect openshiftassistedcontrolplanes.controlplane.cluster.x-k8s.io --all-namespaces
 
     # OpenShift console plug-in enablement
     run_inspect consoles.operator.openshift.io
