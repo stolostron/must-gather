@@ -41,6 +41,9 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect ns/open-cluster-management-issuer
   run_inspect ansiblejobs.tower.ansible.com --all-namespaces
 
+  # Fine Grained RBAC CRs
+  run_inspect multiclusterroleassignments.rbac.open-cluster-management.io --all-namespaces
+
   # Backup and Restore chart,  OADP Operator and Velero CRs
   run_inspect restores.cluster.open-cluster-management.io --all-namespaces
   run_inspect backupschedules.cluster.open-cluster-management.io --all-namespaces
