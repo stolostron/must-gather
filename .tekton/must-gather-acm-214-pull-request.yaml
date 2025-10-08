@@ -30,7 +30,7 @@ spec:
     - name: hermetic
       value: 'true'
     - name: prefetch-input
-      value: '[{"type": "rpm", "path": "build"}]'
+      value: '[{"type": "rpm", "path": "build"},{"type": "gomod", "path": "external/hypershift"}]'
     - name: image-expires-after
       value: 5d
     - name: build-source-image
