@@ -1,7 +1,13 @@
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-FROM quay.io/openshift/origin-cli:4.21 as builder
+FROM quay.io/openshift/origin-cli:4.21 as oc-cli
+
+FROM registry.access.redhat.com/ubi9/go-toolset:latest as hypershift-cli
+
+WORKDIR /hypershift
+COPY --chown=default external/hypershift .
+RUN make hypershift
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
@@ -12,7 +18,10 @@ ENV BASE_COLLECTION_PATH=/must-gather \
 RUN microdnf install -y jq tar gzip rsync findutils
 
 # Copy binaries
-COPY --from=builder /usr/bin/oc /usr/bin/oc
+COPY --from=oc-cli /usr/bin/oc /usr/bin/oc
+
+# Copy hypershift CLI binary
+COPY --from=hypershift-cli /hypershift/bin/hypershift /usr/bin/hypershift
 
 # Copy license
 RUN mkdir licenses/
