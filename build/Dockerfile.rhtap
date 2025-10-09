@@ -45,3 +45,4 @@ LABEL io.k8s.description="Must-gather scripts for Red Hat Advanced Cluster Manag
 LABEL com.redhat.component="acm-must-gather-container"
 LABEL io.openshift.tags="data,images"
 LABEL url="https://github.com/stolostron/must-gather"
+LABEL cpe="cpe:/a:redhat:acm:2.15::el9"
