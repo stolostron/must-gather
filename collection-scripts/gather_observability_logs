@@ -26,4 +26,9 @@ if [[ -n "$MCO_NAME" ]]; then
     # Cluster and user workload monitoring config for alert forwarding
     run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
     run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
+    # MCOA resources
+    run_inspect prometheusagents.monitoring.rhobs -n open-cluster-management-observability
+    run_inspect prometheusrules.monitoring.coreos.com -n open-cluster-management-observability
+    run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
+    run_inspect ns/openshift-cluster-observability-operator
 fi
