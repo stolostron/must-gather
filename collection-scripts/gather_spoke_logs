@@ -82,6 +82,13 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   for namespace in ${OBSERVABILITY_NAMESPACES}; do
     run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
   done
+  # MCOA resources
+  for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES}; do
+    run_inspect prometheusagents.monitoring.rhobs -n "$addon_namespace"
+    run_inspect prometheusrules.monitoring.coreos.com -n "$addon_namespace"
+  done
+  run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
+  run_inspect ns/openshift-cluster-observability-operator
 
   # Cluster and user workload monitoring config for alert forwarding
   run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
