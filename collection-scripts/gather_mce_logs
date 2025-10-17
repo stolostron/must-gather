@@ -144,6 +144,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect manifestworks.work.open-cluster-management.io --all-namespaces
     run_inspect managedclusters.cluster.open-cluster-management.io --all-namespaces
     run_inspect managedclusterinfos.internal.open-cluster-management.io --all-namespaces
+
     run_inspect clustermanagers.operator.open-cluster-management.io --all-namespaces
     run_inspect managedserviceaccounts.authentication.open-cluster-management.io --all-namespaces
     run_inspect managedclustersets.cluster.open-cluster-management.io --all-namespaces
@@ -163,6 +164,12 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect addontemplates.addon.open-cluster-management.io --all-namespaces
 
     run_inspect klusterletconfigs.config.open-cluster-management.io --all-namespaces
+
+    # Collect Lease resources for each managed cluster
+    MANAGED_CLUSTER_NAMESPACES=$(oc get managedclusters.cluster.open-cluster-management.io --no-headers=true -o custom-columns="NAME:.metadata.name")
+    for mc_ns in ${MANAGED_CLUSTER_NAMESPACES}; do
+      run_inspect leases.coordination.k8s.io --namespace "$mc_ns"
+    done
 
     run_inspect ns/openshift-monitoring
     run_inspect imagecontentsourcepolicies.operator.openshift.io
