@@ -84,6 +84,8 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
       run_inspect ns/"$pns"
     done
     GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+    # migration
+    run_inspect managedclustermigration --all-namespaces
     log "GlobalHub namespace: $GLOBALHUB_NAMESPACE"
     run_inspect ns/"$GLOBALHUB_NAMESPACE"
   fi
