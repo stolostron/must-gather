@@ -7,13 +7,13 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/cancel-in-progress: "false"
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch == "release-2.15"
-  creationTimestamp:
+    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch == "release-2.16"
+  creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: release-acm-215
-    appstudio.openshift.io/component: must-gather-acm-215
+    appstudio.openshift.io/application: release-acm-216
+    appstudio.openshift.io/component: must-gather-acm-216
     pipelines.appstudio.openshift.io/type: build
-  name: must-gather-acm-215-on-push
+  name: must-gather-acm-216-on-push
   namespace: crt-redhat-acm-tenant
 spec:
   params:
@@ -22,7 +22,7 @@ spec:
     - name: revision
       value: '{{revision}}'
     - name: output-image
-      value: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/must-gather-acm-215:{{revision}}
+      value: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/must-gather-acm-216:{{revision}}
     - name: path-context
       value: .
     - name: dockerfile
@@ -49,7 +49,7 @@ spec:
       - name: pathInRepo
         value: pipelines/common.yaml
   taskRunTemplate:
-    serviceAccountName: build-pipeline-must-gather-acm-215
+    serviceAccountName: build-pipeline-must-gather-acm-216
   workspaces:
     - name: git-auth
       secret:
