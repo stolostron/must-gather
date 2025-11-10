@@ -1,9 +1,9 @@
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-FROM registry.redhat.io/openshift4/ose-cli-rhel9:v4.19 as oc-cli
+FROM registry.redhat.io/openshift4/ose-cli-rhel9:latest AS oc-cli
 
-FROM registry.access.redhat.com/ubi9/go-toolset:latest as hypershift-cli
+FROM registry.access.redhat.com/ubi9/go-toolset:latest AS hypershift-cli
 
 WORKDIR /hypershift
 COPY --chown=default external/hypershift .
