@@ -1,9 +1,9 @@
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
-FROM quay.io/openshift/origin-cli:4.21 as oc-cli
+FROM quay.io/openshift/origin-cli:latest AS oc-cli
 
-FROM registry.access.redhat.com/ubi9/go-toolset:latest as hypershift-cli
+FROM registry.access.redhat.com/ubi9/go-toolset:latest AS hypershift-cli
 
 WORKDIR /hypershift
 COPY --chown=default external/hypershift .
