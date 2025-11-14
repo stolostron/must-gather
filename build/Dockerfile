@@ -1,3 +1,5 @@
+ARG ACM_VERSION=${ACM_VERSION}
+
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
@@ -44,3 +46,4 @@ LABEL io.k8s.display-name="ACM Must-gather"
 LABEL io.k8s.description="Must-gather scripts for Red Hat Advanced Cluster Management"
 LABEL com.redhat.component="acm-must-gather-container"
 LABEL io.openshift.tags="data,images"
+LABEL cpe="cpe:/a:redhat:acm:${ACM_VERSION}::el9"
