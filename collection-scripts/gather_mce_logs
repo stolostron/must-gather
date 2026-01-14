@@ -89,6 +89,8 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
       print_with_header "Openshift CLI version" "$(oc version)"
       print_with_header "ClusterServiceVersion in namespace ${OPERATOR_NAMESPACE}" \
         "$(oc get clusterserviceversions.operators.coreos.com -n "${OPERATOR_NAMESPACE}")"
+      print_with_header "MultiClusterEngine resource in namespace ${OPERATOR_NAMESPACE}" \
+        "$(oc get multiclusterengines.multicluster.openshift.io -n "${OPERATOR_NAMESPACE}")"
     } >${BASE_COLLECTION_PATH}/gather-mce.log
 
     # If the namespaces are different, capture the pods in each namespace.
