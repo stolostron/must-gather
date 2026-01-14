@@ -48,6 +48,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     agent_cluster_install_list=$(oc get agentclusterinstalls.extensions.hive.openshift.io --all-namespaces -o json)
     total_installs=$(echo "${agent_cluster_install_list}" | jq '.items | length')
 
+    if [ "${total_installs}" -gt 0 ]; then
     for idx in $(seq 0 $((total_installs - 1))); do
       install_json=$(echo "${agent_cluster_install_list}" | jq '.items['${idx}']')
       install_name=$(echo "${install_json}" | jq -r '.metadata.name')
@@ -69,6 +70,9 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
         curl -k -o ${dir}/${install_name}.events "${eventsURL}"
       fi
     done
+    else
+      log "No agentclusterinstalls found"
+    fi
   }
 
   gather_hub() {
