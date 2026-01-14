@@ -17,6 +17,8 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
     print_with_header "Openshift CLI version" "$(oc version)"
     print_with_header "ClusterServiceVersion in namespace ${HUB_NAMESPACE}" \
       "$(oc get clusterserviceversions.operators.coreos.com -n "${HUB_NAMESPACE}")"
+    print_with_header "MultiClusterHub resource in namespace ${HUB_NAMESPACE}" \
+      "$(oc get multiclusterhubs.operator.open-cluster-management.io -n "${HUB_NAMESPACE}")"
     print_with_header "Pods in hub namespace ${HUB_NAMESPACE}" "$(oc get pods -n "${HUB_NAMESPACE}")"
   } >"${BASE_COLLECTION_PATH}/gather-acm.log"
 
