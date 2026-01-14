@@ -15,7 +15,8 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   log "Hub namespace: $HUB_NAMESPACE"
   {
     print_with_header "Openshift CLI version" "$(oc version)"
-    print_with_header "ClusterServiceVersions in namespace ${HUB_NAMESPACE}" "$(oc get clusterserviceversions.operators.coreos.com -n "${HUB_NAMESPACE}")"
+    print_with_header "ClusterServiceVersion in namespace ${HUB_NAMESPACE}" \
+      "$(oc get clusterserviceversions.operators.coreos.com -n "${HUB_NAMESPACE}")"
     print_with_header "Pods in hub namespace ${HUB_NAMESPACE}" "$(oc get pods -n "${HUB_NAMESPACE}")"
   } >"${BASE_COLLECTION_PATH}/gather-acm.log"
 
@@ -94,12 +95,12 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect ns/multicluster-global-hub-agent
   run_inspect ns/open-cluster-management-global-hub-agent-addon
 
-  # Get disconneted information
+  # Get disconnected information
   run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
 
   # version information
   run_inspect clusterversions
-  run_inspect csv -n "$HUB_NAMESPACE"
+  run_inspect clusterserviceversions.operators.coreos.com -n "$HUB_NAMESPACE"
 
   # OpenShift console plug-in enablement
   run_inspect consoles.operator.openshift.io

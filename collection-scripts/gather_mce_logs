@@ -46,7 +46,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
   gather_service_and_event_logs_for_failed_agents() {
     gather_dir=${1}
     agent_cluster_install_list=$(oc get agentclusterinstalls.extensions.hive.openshift.io --all-namespaces -o json)
-    total_installs=$(echo "${agent_cluster_install_list}" | jq '.items | length' )
+    total_installs=$(echo "${agent_cluster_install_list}" | jq '.items | length')
 
     for idx in $(seq 0 $((total_installs - 1))); do
       install_json=$(echo "${agent_cluster_install_list}" | jq '.items['${idx}']')
@@ -76,8 +76,12 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect customresourcedefinition.apiextensions.k8s.io
 
     if [[ -z "$MCE_NAME" ]]; then
-      MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-      OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
+      MCE_NAME=$(
+        oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }'
+      )
+      OPERATOR_NAMESPACE=$(
+        oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }'
+      )
       DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
     fi
 
