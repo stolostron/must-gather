@@ -85,16 +85,21 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
       DEPLOYMENT_NAMESPACE=$(oc get mce "$MCE_NAME" -o jsonpath='{.spec.targetNamespace}')
     fi
 
+    {
+      print_with_header "Openshift CLI version" "$(oc version)"
+      print_with_header "ClusterServiceVersion in namespace ${OPERATOR_NAMESPACE}" \
+        "$(oc get clusterserviceversions.operators.coreos.com -n "${OPERATOR_NAMESPACE}")"
+    } >${BASE_COLLECTION_PATH}/gather-mce.log
+
     # If the namespaces are different, capture the pods in each namespace.
     if [[ $DEPLOYMENT_NAMESPACE != "$OPERATOR_NAMESPACE" ]]; then
       log "MCE target and operator namespace are different"
 
       {
-        log "Listing pods in $OPERATOR_NAMESPACE namespace:"
-        oc get pods -n "${OPERATOR_NAMESPACE}"
-
-        log "Listing pods in $DEPLOYMENT_NAMESPACE namespace:"
-        oc get pods -n "${DEPLOYMENT_NAMESPACE}"
+        print_with_header "Pods in namespace ${OPERATOR_NAMESPACE}" \
+          "$(oc get pods -n "${OPERATOR_NAMESPACE}")"
+        print_with_header "Pods in namespace ${DEPLOYMENT_NAMESPACE}" \
+          "$(oc get pods -n "${DEPLOYMENT_NAMESPACE}")"
       } >>${BASE_COLLECTION_PATH}/gather-mce.log
 
       run_inspect ns/"${OPERATOR_NAMESPACE}"
@@ -103,16 +108,14 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
       run_inspect roles --namespace "${DEPLOYMENT_NAMESPACE}"
 
     else
-      log "Listing pods in $OPERATOR_NAMESPACE namespace:" >>${BASE_COLLECTION_PATH}/gather-mce.log
+      print_with_header "Pods in namespace ${OPERATOR_NAMESPACE}" \
+        "$(oc get pods -n "${OPERATOR_NAMESPACE}")" >>${BASE_COLLECTION_PATH}/gather-mce.log
 
-      oc get pods -n "${OPERATOR_NAMESPACE}" >>${BASE_COLLECTION_PATH}/gather-mce.log
       run_inspect ns/"${OPERATOR_NAMESPACE}"
       run_inspect serviceaccounts --namespace "${OPERATOR_NAMESPACE}"
       run_inspect roles --namespace "${OPERATOR_NAMESPACE}"
     fi
 
-    log "ClusterServiceVersion for MCE:" >>${BASE_COLLECTION_PATH}/gather-mce.log
-    oc get csv -n "${OPERATOR_NAMESPACE}" >>${BASE_COLLECTION_PATH}/gather-mce.log
     run_inspect ns/open-cluster-management-hub
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
     oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy-mce.log
