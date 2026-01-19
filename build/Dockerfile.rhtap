@@ -13,6 +13,8 @@ RUN make hypershift
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
+ARG ACM_VERSION
+
 ENV BASE_COLLECTION_PATH=/must-gather \
     USER_UID=1001 \
     USER_NAME=must-gather
