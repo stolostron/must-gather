@@ -1,4 +1,4 @@
 [submodule "external/hypershift"]
 	path = external/hypershift
 	url = https://github.com/openshift/hypershift.git
-	branch = release-4.20
+	branch = release-4.22
