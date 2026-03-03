@@ -98,6 +98,7 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
 
   # OpenShift console plug-in enablement
   run_inspect consoles.operator.openshift.io
+  run_inspect consoleplugins.console.openshift.io
 
   export GATHER_HUB_RAN=true
 fi
