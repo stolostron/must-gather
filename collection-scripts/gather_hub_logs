@@ -80,12 +80,6 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
     for kns in $KAFKANS; do
       run_inspect ns/"$kns"
     done
-    # postgresql
-    run_inspect postgresclusters.postgres-operator.crunchydata.com --all-namespaces
-    POSTGRESNS=$(oc get postgresclusters.postgres-operator.crunchydata.com --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
-    for pns in $POSTGRESNS; do
-      run_inspect ns/"$pns"
-    done
     GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
     # migration
     run_inspect managedclustermigration --all-namespaces
@@ -95,7 +89,6 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
 
   # Multicluster Global Hub Agent information
   run_inspect ns/multicluster-global-hub-agent
-  run_inspect ns/open-cluster-management-global-hub-agent-addon
 
   # Get disconnected information
   run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
