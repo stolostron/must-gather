@@ -9,7 +9,7 @@ FROM registry.access.redhat.com/ubi9/go-toolset:latest AS hypershift-cli
 
 WORKDIR /hypershift
 COPY --chown=default external/hypershift .
-RUN make hypershift
+RUN CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime make hypershift
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
