@@ -3,8 +3,31 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 7 * * MON#1"
+      timezone: America/New_York
     groups:
       github-actions:
         patterns:
           - "*"
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: cron
+      cronjob: "0 7 * * MON#1"
+      timezone: America/New_York
+    groups:
+      gomod:
+        patterns:
+          - "*"
+    allow:
+      - dependency-type: all
+    ignore:
+      - dependency-name: "k8s.io/*"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      - dependency-name: "*.k8s.io/*"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
