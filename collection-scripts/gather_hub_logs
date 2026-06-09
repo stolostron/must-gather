@@ -12,7 +12,7 @@ fi
 if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   log "Starting ACM Hub cluster must-gather"
   HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-  log "Hub namespace: $HUB_NAMESPACE"
+  log "Hub namespace: ${HUB_NAMESPACE}"
   {
     print_with_header "Openshift CLI version" "$(oc version)"
     print_with_header "ClusterServiceVersion in namespace ${HUB_NAMESPACE}" \
@@ -20,6 +20,14 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
     print_with_header "MultiClusterHub resource in namespace ${HUB_NAMESPACE}" \
       "$(oc get multiclusterhubs.operator.open-cluster-management.io -n "${HUB_NAMESPACE}")"
     print_with_header "Pods in hub namespace ${HUB_NAMESPACE}" "$(oc get pods -n "${HUB_NAMESPACE}")"
+    {
+      echo -e "DEPLOYMENT\tVERSION"
+      oc get deployments -n "${HUB_NAMESPACE}" -o json |
+        jq -r '.items[].metadata | 
+        .name + "\t" + (.annotations["installer.open-cluster-management.io/release-version"] //
+        .labels.chart // 
+        "-")'
+    } | column -t
   } >"${BASE_COLLECTION_PATH}/gather-acm.log"
 
   run_inspect ns/"$HUB_NAMESPACE"
