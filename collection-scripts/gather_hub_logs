@@ -3,13 +3,14 @@
 # Copyright Contributors to the Open Cluster Management project
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-source ${SCRIPT_DIR}/gather_utils
+# shellcheck source=collection-scripts/gather_utils
+source "${SCRIPT_DIR}/gather_utils"
 
 if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-  ${SCRIPT_DIR}/gather_mce_logs
+  "${SCRIPT_DIR}/gather_mce_logs"
 fi
 
-if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
+if [ -z "${GATHER_HUB_RAN}" ] || [ "${GATHER_HUB_RAN}" != "true" ]; then
   log "Starting ACM Hub cluster must-gather"
   HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
   log "Hub namespace: ${HUB_NAMESPACE}"
@@ -36,7 +37,7 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
   run_inspect ns/open-cluster-management-hub
   run_inspect ns/open-cluster-management-backup
   # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
-  oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy.log
+  oc get proxy -o yaml >"${BASE_COLLECTION_PATH}/gather-proxy.log"
   run_inspect multiclusterhubs.operator.open-cluster-management.io --all-namespaces
   run_inspect internalhubcomponents.operator.open-cluster-management.io --all-namespaces
   run_inspect klusterletaddonconfigs.agent.open-cluster-management.io --all-namespaces

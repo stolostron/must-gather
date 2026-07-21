@@ -103,7 +103,7 @@ extract_hypershift_cli() {
   fi
 
   # Extract the hypershift CLI from the hypershift operator pod
-  oc rsync -c operator -n hypershift ${HO_POD_NAME}:/usr/bin/hypershift /tmp
+  oc rsync -c operator -n hypershift "${HO_POD_NAME}:/usr/bin/hypershift" /tmp
   chmod 755 /tmp/hypershift
   return 0
 }
@@ -114,14 +114,14 @@ dump_hostedcluster() {
     return 0
   fi
 
-  HC=$(oc get hostedcluster $HC_NAME -n $HC_NAMESPACE)
+  HC=$(oc get hostedcluster "${HC_NAME}" -n "${HC_NAMESPACE}")
   if [[ -z $HC ]]; then
     log "ERROR" "hosted cluster \"$HC_NAME\" not found in \"$HC_NAMESPACE\" namespace"
     return 1
   fi
 
   # This could be the second time to be here if both MCE and spoke gathers are run.
-  if [ -f $BASE_COLLECTION_PATH/hypershift-dump.tar.gz ]; then
+  if [ -f "${BASE_COLLECTION_PATH}/hypershift-dump.tar.gz" ]; then
     log "Must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\" has already been collected."
     return 0
   fi
