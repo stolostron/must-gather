@@ -22,11 +22,8 @@ check_managed_clusters() {
   # to capture details in the managed cluster namespace to debug hive issues
   # refer https://github.com/open-cluster-management/backlog/issues/2682
   local mc_namespaces
-  mc_namespaces=$(oc get clusterdeployments.hive.openshift.io -A -o custom-columns=":metadata.namespace" --no-headers=true | sort -u)
-
-  for mcns in ${mc_namespaces}; do
-    run_inspect ns/"$mcns"
-  done
+  mapfile -t mc_namespaces < <(oc get clusterdeployments.hive.openshift.io -A -o custom-columns=":metadata.namespace" --no-headers=true | sort -u)
+  run_inspect_batched_by_name namespace "${mc_namespaces[@]}"
 }
 
 gather_service_and_event_logs_for_failed_agents() {
@@ -206,10 +203,8 @@ gather_hub() {
   run_inspect klusterletconfigs.config.open-cluster-management.io --all-namespaces
 
   # Collect Lease resources for each managed cluster
-  MANAGED_CLUSTER_NAMESPACES=$(oc get managedclusters.cluster.open-cluster-management.io --no-headers=true -o custom-columns="NAME:.metadata.name")
-  for mc_ns in ${MANAGED_CLUSTER_NAMESPACES}; do
-    run_inspect leases.coordination.k8s.io --namespace "$mc_ns"
-  done
+  mapfile -t MANAGED_CLUSTER_NAMESPACES < <(oc get managedclusters.cluster.open-cluster-management.io --no-headers=true -o custom-columns="NAME:.metadata.name")
+  run_inspect_batched_by_namespace leases.coordination.k8s.io "${MANAGED_CLUSTER_NAMESPACES[@]}"
 
   run_inspect ns/openshift-monitoring
   run_inspect imagecontentsourcepolicies.operator.openshift.io
