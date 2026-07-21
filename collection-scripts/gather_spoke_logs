@@ -3,7 +3,8 @@
 # Copyright Contributors to the Open Cluster Management project
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-source ${SCRIPT_DIR}/gather_utils
+# shellcheck source=collection-scripts/gather_utils
+source "${SCRIPT_DIR}/gather_utils"
 
 HC_NAME=${HC_NAME:-""}
 HC_NAMESPACE=${HC_NAMESPACE:-"clusters"}

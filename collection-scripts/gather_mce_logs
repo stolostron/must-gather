@@ -3,21 +3,22 @@
 # Copyright Contributors to the Open Cluster Management project
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-source ${SCRIPT_DIR}/gather_utils
+# shellcheck source=collection-scripts/gather_utils
+source "${SCRIPT_DIR}/gather_utils"
 
-if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
+if [ -z "${GATHER_MCE_RAN}" ] || [ "${GATHER_MCE_RAN}" != "true" ]; then
   BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"/must-gather"}
 
-  if ! mkdir -p ${BASE_COLLECTION_PATH}; then
+  if ! mkdir -p "${BASE_COLLECTION_PATH}"; then
     log "WARN" "Failed to create base collection directory: $BASE_COLLECTION_PATH (defaulting path to: \"./must-gather\")."
 
     BASE_COLLECTION_PATH="./must-gather"
-    if [[ -d $BASE_COLLECTION_PATH ]]; then
+    if [[ -d "${BASE_COLLECTION_PATH}" ]]; then
       log "WARN" "Directory \"$BASE_COLLECTION_PATH\" already exists. Setting new path to prevent override: \"$BASE_COLLECTION_PATH-$(date +%Y-%m-%d-%s)\"."
       BASE_COLLECTION_PATH="$BASE_COLLECTION_PATH-$(date +%Y-%m-%d-%s)"
     fi
 
-    mkdir -p $BASE_COLLECTION_PATH && echo -e
+    mkdir -p "${BASE_COLLECTION_PATH}" && echo -e
   fi
 
   # Set a file path for the gather managed clusters.
@@ -27,11 +28,11 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
   HC_NAMESPACE=${HC_NAMESPACE:-"clusters"}
 
   check_managed_clusters() {
-    touch $MANAGED_CLUSTER_FILE_PATH
-    log "The list of managed clusters that are configured on this hub:" 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
+    touch "${MANAGED_CLUSTER_FILE_PATH}"
+    log "The list of managed clusters that are configured on this hub:" 2>&1 | tee -a "${MANAGED_CLUSTER_FILE_PATH}"
 
     # These calls will change with new API
-    oc get managedclusters.cluster.open-cluster-management.io --all-namespaces 2>&1 | tee -a $MANAGED_CLUSTER_FILE_PATH
+    oc get managedclusters.cluster.open-cluster-management.io --all-namespaces 2>&1 | tee -a "${MANAGED_CLUSTER_FILE_PATH}"
 
     # to capture details in the managed cluster namespace to debug hive issues
     # refer https://github.com/open-cluster-management/backlog/issues/2682
@@ -50,7 +51,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     if [ "${total_installs}" -gt 0 ]; then
       for idx in $(seq 0 $((total_installs - 1))); do
-        install_json=$(echo "${agent_cluster_install_list}" | jq '.items['${idx}']')
+        install_json=$(echo "${agent_cluster_install_list}" | jq '.items['"${idx}"']')
         install_name=$(echo "${install_json}" | jq -r '.metadata.name')
         install_namespace=$(echo "${install_json}" | jq -r '.metadata.namespace')
         dir=${gather_dir}/namespaces/${install_namespace}/extensions.hive.openshift.io/agentclusterinstalls
@@ -63,11 +64,11 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
         logsURL=$(echo "${install_json}" | jq -r '.status.debugInfo.logsURL')
         if [ -n "${logsURL}" ]; then
-          curl -k -o ${dir}/${install_name}.logs.tar "${logsURL}"
+          curl -k -o "${dir}/${install_name}.logs.tar" "${logsURL}"
         fi
         eventsURL=$(echo "${install_json}" | jq -r '.status.debugInfo.eventsURL')
         if [ -n "${eventsURL}" ]; then
-          curl -k -o ${dir}/${install_name}.events "${eventsURL}"
+          curl -k -o "${dir}/${install_name}.events" "${eventsURL}"
         fi
       done
     else
@@ -95,7 +96,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
         "$(oc get clusterserviceversions.operators.coreos.com -n "${OPERATOR_NAMESPACE}")"
       print_with_header "MultiClusterEngine resource in namespace ${OPERATOR_NAMESPACE}" \
         "$(oc get multiclusterengines.multicluster.openshift.io -n "${OPERATOR_NAMESPACE}")"
-    } >${BASE_COLLECTION_PATH}/gather-mce.log
+    } >"${BASE_COLLECTION_PATH}/gather-mce.log"
 
     # If the namespaces are different, capture the pods in each namespace.
     if [[ $DEPLOYMENT_NAMESPACE != "$OPERATOR_NAMESPACE" ]]; then
@@ -106,7 +107,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
           "$(oc get pods -n "${OPERATOR_NAMESPACE}")"
         print_with_header "Pods in namespace ${DEPLOYMENT_NAMESPACE}" \
           "$(oc get pods -n "${DEPLOYMENT_NAMESPACE}")"
-      } >>${BASE_COLLECTION_PATH}/gather-mce.log
+      } >>"${BASE_COLLECTION_PATH}/gather-mce.log"
 
       run_inspect ns/"${OPERATOR_NAMESPACE}"
       run_inspect ns/"${DEPLOYMENT_NAMESPACE}"
@@ -115,7 +116,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     else
       print_with_header "Pods in namespace ${OPERATOR_NAMESPACE}" \
-        "$(oc get pods -n "${OPERATOR_NAMESPACE}")" >>${BASE_COLLECTION_PATH}/gather-mce.log
+        "$(oc get pods -n "${OPERATOR_NAMESPACE}")" >>"${BASE_COLLECTION_PATH}/gather-mce.log"
 
       run_inspect ns/"${OPERATOR_NAMESPACE}"
       run_inspect serviceaccounts --namespace "${OPERATOR_NAMESPACE}"
@@ -124,7 +125,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     run_inspect ns/open-cluster-management-hub
     # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
-    oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy-mce.log
+    oc get proxy -o yaml >"${BASE_COLLECTION_PATH}/gather-proxy-mce.log"
     run_inspect customresourcedefinition.apiextensions.k8s.io
     run_inspect ns/hive
     run_inspect multiclusterengines.multicluster.openshift.io --all-namespaces
@@ -234,7 +235,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect consoleplugins.console.openshift.io
 
     # Gather any service or event logs for failed agents
-    gather_service_and_event_logs_for_failed_agents ${BASE_COLLECTION_PATH}
+    gather_service_and_event_logs_for_failed_agents "${BASE_COLLECTION_PATH}"
   }
 
   log "Starting MCE Hub cluster must-gather"
