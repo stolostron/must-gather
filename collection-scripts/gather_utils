@@ -8,6 +8,7 @@ BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"./must-gather"}
 log() {
   lvl="${1}"
   msg="${2}"
+  subscript_name=$(basename "${0}")
 
   if [[ "$#" == "1" ]]; then
     msg="${1}"
@@ -19,7 +20,7 @@ log() {
     *) lvl="INFO";;
   esac
 
-  printf "%s\tacm-must-gather\t%s\n" "${lvl}" "${msg}"
+  printf "%s\tacm-must-gather\t%s\t%s\n" "${lvl}" "${subscript_name}" "${msg}"
 }
 
 # print_header prints an underlined heading with a trailing newline
