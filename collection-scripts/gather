@@ -53,18 +53,27 @@ check_if_spoke() {
 
 if check_if_engine; then
   if check_if_hub; then
-    # NOTE: The `gather_all_logs` script includes `gather_mce_logs`
     log "Running ACM MultiClusterHub Must-Gather"
-    "${SCRIPT_DIR}/gather_all_logs"
-  else
-    log "Running MulticlusterEngine Must-Gather"
-    "${SCRIPT_DIR}/gather_mce_logs"
+    "${SCRIPT_DIR}/gather_all_logs" &
+    pids+=($!)
   fi
+
+  log "Running MulticlusterEngine Must-Gather"
+  "${SCRIPT_DIR}/gather_mce_logs" &
+  pids+=($!)
 fi
 
 if check_if_spoke; then
   log "Running spoke cluster must-gather"
-  "${SCRIPT_DIR}/gather_spoke_logs"
+  "${SCRIPT_DIR}/gather_spoke_logs" &
+  pids+=($!)
+fi
+
+# Check if PID array has any values, if so, wait for them to finish
+if [ ${#pids[@]} -ne 0 ]; then
+    log "All ACM must-gather scripts have started. Waiting on subprocesses to finish execution."
+    wait "${pids[@]}"
+    log "All ACM must-gather scripts have completed."
 fi
 
 log "ACM must-gather complete."
