@@ -4,7 +4,7 @@
 
 .PHONY: clean
 clean:
-	-rm -rf must-gather/
+	-rm -rf must-gather*/
 	-rm kubeconfig
 
 ############################################################
