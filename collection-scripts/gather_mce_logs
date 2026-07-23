@@ -133,6 +133,17 @@ gather_hub() {
     run_inspect roles --namespace "${OPERATOR_NAMESPACE}"
   fi
 
+  deployment_json=$(oc get deployments -n "${DEPLOYMENT_NAMESPACE}" -o json)
+  max_name_length=$(echo "${deployment_json}" | jq -r '[.items[].metadata.name | length] | max')
+  {
+    echo -e "DEPLOYMENT\tVERSION"
+    echo "${deployment_json}" |
+      jq -r '.items[].metadata | 
+        .name + "\t" + (.annotations["installer.multicluster.openshift.io/release-version"] //
+        .labels.chart // 
+        "-")'
+  } | awk '{ printf "%-'"${max_name_length}"'s %s\n", $1, $2 }' >>"${BASE_COLLECTION_PATH}/gather-mce.log"
+
   run_inspect ns/open-cluster-management-hub
   run_inspect proxies.config.openshift.io
   echo "proxy info now at cluster-scoped-resources/config.openshift.io/proxies" \
