@@ -14,8 +14,6 @@ SPOKE_CLUSTER=false
 MCE_NAME=""
 export OPERATOR_NAMESPACE=""
 export DEPLOYMENT_NAMESPACE=""
-export GATHER_MCE_RAN=false
-export GATHER_HUB_RAN=false
 export HC_NAME=""
 export HC_NAMESPACE="clusters" # default hosted cluster namespace
 
