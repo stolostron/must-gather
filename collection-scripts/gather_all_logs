@@ -9,9 +9,6 @@ source "${SCRIPT_DIR}/gather_utils"
 # Store PIDs of all the subprocesses
 pids=()
 
-"${SCRIPT_DIR}/gather_mce_logs" &
-pids+=($!)
-
 "${SCRIPT_DIR}/gather_hub_logs" &
 pids+=($!)
 
@@ -29,7 +26,7 @@ pids+=($!)
 
 # Check if PID array has any values, if so, wait for them to finish
 if [ ${#pids[@]} -ne 0 ]; then
-    log "All ACM must-gather scripts have started. Waiting on subprocesses to finish execution."
+    log "All ACM hub must-gather scripts have started. Waiting on subprocesses to finish execution."
     wait "${pids[@]}"
-    log "All ACM must-gather scripts have completed."
+    log "All ACM hub must-gather scripts have completed."
 fi
