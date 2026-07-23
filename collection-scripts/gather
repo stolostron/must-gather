@@ -49,6 +49,11 @@ check_if_spoke() {
   return 1
 }
 
+log "
+Current system limits:
+$(ulimit -a)
+"
+
 if check_if_engine; then
   if check_if_hub; then
     log "Running ACM MultiClusterHub Must-Gather"
@@ -69,9 +74,17 @@ fi
 
 # Check if PID array has any values, if so, wait for them to finish
 if [ ${#pids[@]} -ne 0 ]; then
-    log "All ACM must-gather scripts have started. Waiting on subprocesses to finish execution."
-    wait "${pids[@]}"
-    log "All ACM must-gather scripts have completed."
+  (
+    while [[ ${thread_count} -ne 1 ]]; do
+      thread_count=$(ps -T -p "${pids[*]}" | wc -l)
+      printf "\n[acm-gather DEBUG]\nUser process count: %s\nCurrent open threads: %s\n%s\n\n" "$(pgrep -cu "$(id -u)")" "$((thread_count - 1))" "$(ps -T -p "${pids[*]}")"
+      sleep 30
+    done
+  ) &
+
+  log "All ACM must-gather scripts have started. Waiting on subprocesses to finish execution."
+  wait "${pids[@]}"
+  log "All ACM must-gather scripts have completed."
 fi
 
 log "ACM must-gather complete."
