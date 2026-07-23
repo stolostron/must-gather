@@ -8,10 +8,7 @@ source "${SCRIPT_DIR}/gather_utils"
 
 mkdir -p "${BASE_COLLECTION_PATH}"
 
-MCE_CLUSTER=false
-HUB_CLUSTER=false
-SPOKE_CLUSTER=false
-MCE_NAME=""
+export MCE_NAME=""
 export OPERATOR_NAMESPACE=""
 export DEPLOYMENT_NAMESPACE=""
 export HC_NAME=""
@@ -23,40 +20,39 @@ check_if_engine() {
   MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
   if [[ -n "${MCE_NAME}" ]]; then
     log "Detected MCE resource: \"${MCE_NAME}\" on current cluster. This cluster has been verified as an engine cluster."
-    MCE_CLUSTER=true
     OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
     DEPLOYMENT_NAMESPACE=$(oc get mce "${MCE_NAME}" -o jsonpath='{.spec.targetNamespace}')
-  else
-    log "No MCE resource detected on the current cluster. This is not an engine cluster (Previous errors can be safely ignored)."
+    return 0
   fi
+
+  log "No MCE resource detected on the current cluster. This is not an engine cluster (Previous errors can be safely ignored)."
+  return 1
 }
 
 check_if_hub() {
   log "Detecting Hub cluster by fetching MCH resource..."
   if oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces; then
     log "Detected MCH resource. This cluster has been verified as a hub cluster."
-    HUB_CLUSTER=true
-  else
-    log "No MCH resource detected on the current cluster. This is not a hub cluster (Previous errors can be safely ignored)."
+    return 0
   fi
+
+  log "No MCH resource detected on the current cluster. This is not a hub cluster (Previous errors can be safely ignored)."
+  return 1
 }
 
 check_if_spoke() {
   log "Detecting Managed cluster by fetching Klusterlet CRD..."
   if oc get crd klusterlets.operator.open-cluster-management.io; then
     log "The current cluster has klusterlets.operator.open-cluster-management.io crd, it is a spoke cluster."
-    SPOKE_CLUSTER=true
-  else
-    log "The current cluster does not have klusterlets.operator.open-cluster-management.io crd, it is not a spoke cluster."
+    return 0
   fi
+
+  log "The current cluster does not have klusterlets.operator.open-cluster-management.io crd, it is not a spoke cluster."
+  return 1
 }
 
-check_if_engine
-check_if_spoke
-
-if ${MCE_CLUSTER}; then
-  check_if_hub
-  if ${HUB_CLUSTER}; then
+if check_if_engine; then
+  if check_if_hub; then
     # NOTE: The `gather_all_logs` script includes `gather_mce_logs`
     log "Running ACM MultiClusterHub Must-Gather"
     "${SCRIPT_DIR}/gather_all_logs"
@@ -66,7 +62,8 @@ if ${MCE_CLUSTER}; then
   fi
 fi
 
-if ${SPOKE_CLUSTER}; then
+if check_if_spoke; then
+  log "Running spoke cluster must-gather"
   "${SCRIPT_DIR}/gather_spoke_logs"
 fi
 
