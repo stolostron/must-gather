@@ -44,8 +44,32 @@ gather_spoke() {
   run_inspect ns/openshift-operators # gatekeeper and volsync operator will be installed in this ns in production
 }
 
+gather_observability() {
+  log "Gathering Observability resources"
+  run_inspect ns/open-cluster-management-addon-observability
+
+  # user workload metrics config - collect observability-metrics-custom-allowlist across all namespaces
+  OBSERVABILITY_NAMESPACES=$(oc get configmap --all-namespaces --field-selector=metadata.name=observability-metrics-custom-allowlist -o jsonpath='{.items[*].metadata.namespace}')
+  for namespace in ${OBSERVABILITY_NAMESPACES}; do
+    run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
+  done
+
+  # MCOA resources
+  for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES}; do
+    run_inspect prometheusagents.monitoring.rhobs -n "$addon_namespace"
+    run_inspect prometheusrules.monitoring.coreos.com -n "$addon_namespace"
+  done
+  run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
+  run_inspect ns/openshift-cluster-observability-operator
+
+  # Cluster and user workload monitoring config for alert forwarding
+  run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
+  run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
+}
+
 log "Starting Managed cluster must-gather"
 gather_spoke
+gather_observability
 parse_args "$@"
 dump_hostedcluster
 
@@ -75,26 +99,6 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   for i in $(oc get crds -o custom-columns=NAME:.metadata.name | grep '\.gatekeeper\.sh$'); do
     run_inspect "$i" --all-namespaces
   done
-
-  # Observability CRs
-  run_inspect ns/open-cluster-management-addon-observability
-  # user workload metrics config - collect observability-metrics-custom-allowlist across all namespaces
-  OBSERVABILITY_NAMESPACES=$(oc get configmap --all-namespaces --field-selector=metadata.name=observability-metrics-custom-allowlist -o jsonpath='{.items[*].metadata.namespace}')
-  for namespace in ${OBSERVABILITY_NAMESPACES}; do
-    run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
-  done
-  # MCOA resources
-  for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES}; do
-    run_inspect prometheusagents.monitoring.rhobs -n "$addon_namespace"
-    run_inspect prometheusrules.monitoring.coreos.com -n "$addon_namespace"
-  done
-  run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
-  run_inspect ns/openshift-cluster-observability-operator
-
-  # Cluster and user workload monitoring config for alert forwarding
-  run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
-  run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
-
 
   # VolSync CRs
   run_inspect replicationdestinations.volsync.backube --all-namespaces
