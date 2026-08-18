@@ -14,7 +14,7 @@ gather_acm_spoke() {
 
   if [[ "${IS_ENGINE:-false}" == "false" ]]; then
     # Version info
-    run_inspect clusterversions
+    run_inspect clusterversions.config.openshift.io
     # Get disconnected information
     run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
   fi
