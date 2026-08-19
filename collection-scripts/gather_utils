@@ -41,6 +41,110 @@ run_inspect() {
   oc adm inspect --dest-dir=${BASE_COLLECTION_PATH} "$@"
 }
 
+# Each potentially sensitive kind and "wrapper" kind should have an entry in this definition.
+# Using a jq `def` ensures that this can recursively descend through multiple "wrapper" kinds.
+# Separating each kind into a separate `def` would cause problems with how `jq` parses this.
+# The "last-applied-configuration" annotation is always redacted: it could contain sensitive
+# information, and it's easiest to just treat it as noise.
+REDACT_DEF='
+def redact_manifest: (
+  (if .metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"] then
+    .metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"] = "REDACTED"
+  else . end) |
+  if .kind == "Secret" and .apiVersion == "v1" then
+    (if has("data") then .data |= map_values("REDACTED") else . end) |
+    (if has("stringData") then .stringData |= map_values("REDACTED") else . end) |
+    (if .metadata.annotations["openshift.io/token-secret.value"] then
+      .metadata.annotations["openshift.io/token-secret.value"] = "REDACTED"
+    else . end)
+  elif .kind == "Route" and .apiVersion == "route.openshift.io/v1" then
+    (if has("spec") then .spec |= (
+      if .tls then .tls |=
+        (if has("key") then .key = "REDACTED" else . end)
+      else . end
+    ) else . end)
+  elif .kind == "Proxy" and .apiVersion == "config.openshift.io/v1" then
+    (if has("spec") then .spec |= (
+      (if has("httpProxy") then .httpProxy = "REDACTED" else . end) |
+      (if has("httpsProxy") then .httpsProxy = "REDACTED" else . end)
+    ) else . end) |
+    (if has("status") then .status |= (
+      (if has("httpProxy") then .httpProxy = "REDACTED" else . end) |
+      (if has("httpsProxy") then .httpsProxy = "REDACTED" else . end)
+    ) else . end)
+  elif .kind == "OAuthClient" and .apiVersion == "oauth.openshift.io/v1" then
+    (if has("secret") then .secret = "REDACTED" else . end) |
+    (if has("additionalSecrets") then .additionalSecrets |= map("REDACTED") else . end)
+  elif .kind == "ConfigurationPolicy" and .apiVersion == "policy.open-cluster-management.io/v1" then
+    (if .spec["object-templates"] then .spec["object-templates"] |=
+      map(.objectDefinition |= redact_manifest) else . end)
+  elif .kind == "Policy" and .apiVersion == "policy.open-cluster-management.io/v1" then
+    (if .spec["policy-templates"] then .spec["policy-templates"] |=
+      map(.objectDefinition |= redact_manifest) else . end)
+  elif .kind == "AddOnTemplate" and .apiVersion == "addon.open-cluster-management.io/v1alpha1" then
+    (if .spec.agentSpec.workload.manifests then .spec.agentSpec.workload.manifests |=
+      map(redact_manifest) else . end)
+  elif .kind == "ManifestWork" and .apiVersion == "work.open-cluster-management.io/v1" then
+    (if .spec.workload.manifests then .spec.workload.manifests |=
+      map(redact_manifest) else . end)
+  elif .kind == "SyncSet" and .apiVersion == "hive.openshift.io/v1" then
+    (if .spec.resources then .spec.resources |=
+      map(redact_manifest) else . end)
+  elif .kind == "SelectorSyncSet" and .apiVersion == "hive.openshift.io/v1" then
+    (if .spec.resources then .spec.resources |=
+      map(redact_manifest) else . end)
+  else .
+  end
+);
+'
+
+# safe_inspect is meant for "wrapper" resources like ManifestWork and ConfigurationPolicy,
+# which may contain nested resources with sensitive information that should be redacted.
+# Note that the resulting files are stored in the usual places, but are JSON, not YAML.
+# The filter recurses through any nested "wrapper" kind it recognizes, so a Secret
+# in an AddOnTemplate in a ManifestWork is still properly redacted.
+safe_inspect() {
+  local kind="${1}"
+  local api_group="${2}"
+
+  log "Safely inspecting ${kind}.${api_group} --all-namespaces"
+
+  local items
+  items="$(oc get "${kind}.${api_group}" "--all-namespaces" -o json 2>/dev/null)" || return 0
+
+  echo "${items}" | jq -c '.items[]' | while IFS= read -r item; do
+    local ns name
+    ns=$(echo "${item}" | jq -r '.metadata.namespace')
+    name=$(echo "${item}" | jq -r '.metadata.name')
+
+    local dest_dir
+    if [[ "${ns}" == "null" ]]; then
+      dest_dir="${BASE_COLLECTION_PATH}/cluster-scoped-resources/${api_group}/${kind}"
+    else
+      dest_dir="${BASE_COLLECTION_PATH}/namespaces/${ns}/${api_group}/${kind}"
+    fi
+
+    # skip if already collected
+    [ -f "${dest_dir}/${name}.json" ] && continue
+
+    mkdir -p "${dest_dir}"
+
+    # Use an intermediate temporary file to avoid multiple streams to the same file.
+    local tmp_file
+    if ! tmp_file="$(mktemp "${dest_dir}/.${name}.json.XXXXXX")"; then
+      log "ERROR" "Unable to inspect ${dest_dir}/.${name}"
+      continue
+    fi
+
+    if ! jq "${REDACT_DEF}"' redact_manifest' <<<"${item}" >"${tmp_file}"; then
+      log "ERROR" "Unable to inspect ${dest_dir}/.${name}"
+      rm -f "${tmp_file}"
+    else
+      mv -f "${tmp_file}" "${dest_dir}/${name}.json"
+    fi
+  done
+}
+
 # parse_args parses the arguments passed to the must-gather in the form of <key>=<value>.
 # NOTE: Currently this only applies to the Hypershift must-gather.
 parse_args() {

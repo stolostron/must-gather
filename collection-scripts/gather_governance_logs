@@ -13,7 +13,7 @@ if [[ "${GATHER_CONTEXT}" == "true" ]]; then
     "${SCRIPT_DIR}/gather_hub_logs"
 fi
 
-run_inspect policies.policy.open-cluster-management.io --all-namespaces
+safe_inspect policies policy.open-cluster-management.io
 run_inspect policysets.policy.open-cluster-management.io --all-namespaces
 run_inspect policyautomations.policy.open-cluster-management.io --all-namespaces
 run_inspect placementbindings.policy.open-cluster-management.io --all-namespaces

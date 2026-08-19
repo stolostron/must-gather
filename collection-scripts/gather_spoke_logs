@@ -87,12 +87,10 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   run_inspect policycontrollers.agent.open-cluster-management.io --all-namespaces
   run_inspect searchcollectors.agent.open-cluster-management.io --all-namespaces
 
-  run_inspect policies.policy.open-cluster-management.io --all-namespaces
+  safe_inspect policies policy.open-cluster-management.io
   run_inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces
   run_inspect iampolicies.policy.open-cluster-management.io --all-namespaces
-  # ref: https://github.com/openshift/oc/pull/1550/files#diff-6f6b5698b5c7ebfc01c64967180a4d2e5f2f248509dae99f7d0d07e13018c366
-  log "ConfigurationPolicies throw error 'the server doesn't have a resource type ', which can be ignored."
-  run_inspect configurationpolicies.policy.open-cluster-management.io --all-namespaces
+  safe_inspect configurationpolicies policy.open-cluster-management.io
   run_inspect operatorpolicies.policy.open-cluster-management.io --all-namespaces
 
   log "Starting Gatekeeper must-gather"
