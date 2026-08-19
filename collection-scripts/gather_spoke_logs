@@ -3,6 +3,9 @@
 # Copyright (c) 2023 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source ${SCRIPT_DIR}/gather_utils
+
 gather_spoke () {
     # collect CRDs to aid automated must-gather readers
     echo "Gathering spoke information for MCE"
@@ -58,10 +61,10 @@ then
     oc adm inspect policycontrollers.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect searchcollectors.agent.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
-    oc adm inspect policies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    safe_inspect policies policy.open-cluster-management.io
     oc adm inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
     oc adm inspect iampolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
-    oc adm inspect configurationpolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
+    safe_inspect configurationpolicies policy.open-cluster-management.io
     oc adm inspect operatorpolicies.policy.open-cluster-management.io --all-namespaces  --dest-dir=must-gather
 
     oc adm inspect ns/open-cluster-management-addon-observability --dest-dir=must-gather
