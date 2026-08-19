@@ -50,13 +50,15 @@ if run_inspect DRCluster; then
   # For ManagedClusterAddons of all namespaces
   oc get managedclusteraddons --all-namespaces >>${BASE_COLLECTION_PATH}/Ramen_resources/managedclusteraddons_all_namespaces
   run_inspect managedclusteraddons --all-namespaces
+  safe_inspect manifestworks work.open-cluster-management.io 
 
   managed_clusters=$(oc get drpolicy -A -o custom-columns=":spec.drClusters" --no-headers=true | sed 's/[][]//g' | sed 's/ /\n/g' | sort -u)
   for managedcluster in ${managed_clusters}; do
-    oc get manifestwork -n "${managedcluster}" >>${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_"${managedcluster}"
-    oc describe manifestwork -n "${managedcluster}" >>${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_"${managedcluster}"
-    oc get managedclusterview -n "${managedcluster}" >>${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_"${managedcluster}"
-    oc describe managedclusterview -n "${managedcluster}" >>${BASE_COLLECTION_PATH}/Ramen_resources/desc_managedclusterview_"${managedcluster}"
+    oc get manifestwork -n "${managedcluster}" >>"${BASE_COLLECTION_PATH}/Ramen_resources/get_manifestwork_${managedcluster}"
+    echo "manifestwork info now at /namespaces/${managedcluster}/work.open-cluster-management.io/manifestworks/" \
+      >>"${BASE_COLLECTION_PATH}/Ramen_resources/desc_manifestwork_${managedcluster}"
+    oc get managedclusterview -n "${managedcluster}" >>"${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_${managedcluster}"
+    oc describe managedclusterview -n "${managedcluster}" >>"${BASE_COLLECTION_PATH}/Ramen_resources/desc_managedclusterview_${managedcluster}"
   done
 else
   log "Skipping DR logs collection because there's no DRCluster resources configured."

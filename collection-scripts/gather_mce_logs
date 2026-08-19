@@ -132,7 +132,8 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect placementdecisions.cluster.open-cluster-management.io --all-namespaces
     run_inspect placements.cluster.open-cluster-management.io --all-namespaces
     run_inspect clusterdeployments.hive.openshift.io --all-namespaces
-    run_inspect syncsets.hive.openshift.io --all-namespaces
+    safe_inspect syncsets hive.openshift.io
+    safe_inspect selectorsyncsets hive.openshift.io
     run_inspect clusterimagesets.hive.openshift.io --all-namespaces
     run_inspect machinesets.machine.openshift.io --all-namespaces
     run_inspect clustercurators.cluster.open-cluster-management.io --all-namespaces
@@ -142,7 +143,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
 
     run_inspect managedclusterviews.view.open-cluster-management.io --all-namespaces
     run_inspect managedclusteractions.action.open-cluster-management.io --all-namespaces
-    run_inspect manifestworks.work.open-cluster-management.io --all-namespaces
+    safe_inspect manifestworks work.open-cluster-management.io
     run_inspect managedclusters.cluster.open-cluster-management.io --all-namespaces
     run_inspect managedclusterinfos.internal.open-cluster-management.io --all-namespaces
     run_inspect clustermanagers.operator.open-cluster-management.io --all-namespaces
@@ -161,7 +162,7 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     run_inspect clustermanagementaddons.addon.open-cluster-management.io --all-namespaces
     run_inspect managedclusteraddons.addon.open-cluster-management.io --all-namespaces
     run_inspect addondeploymentconfigs.addon.open-cluster-management.io --all-namespaces
-    run_inspect addontemplates.addon.open-cluster-management.io --all-namespaces
+    safe_inspect addontemplates addon.open-cluster-management.io
 
     run_inspect klusterletconfigs.config.open-cluster-management.io --all-namespaces
 
