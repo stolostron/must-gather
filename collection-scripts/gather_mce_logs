@@ -110,8 +110,9 @@ if [ -z $GATHER_MCE_RAN ] || [ $GATHER_MCE_RAN != true ]; then
     log "ClusterServiceVersion for MCE:" >>${BASE_COLLECTION_PATH}/gather-mce.log
     oc get csv -n "${OPERATOR_NAMESPACE}" >>${BASE_COLLECTION_PATH}/gather-mce.log
     run_inspect ns/open-cluster-management-hub
-    # request from https://bugzilla.redhat.com/show_bug.cgi?id=1853485
-    oc get proxy -o yaml >${BASE_COLLECTION_PATH}/gather-proxy-mce.log
+    run_inspect proxies.config.openshift.io
+    echo "proxy info now at cluster-scoped-resources/config.openshift.io/proxies"\
+      >"${BASE_COLLECTION_PATH}/gather-proxy-mce.log"
     run_inspect customresourcedefinition.apiextensions.k8s.io
     run_inspect ns/hive
     run_inspect multiclusterengines.multicluster.openshift.io --all-namespaces
