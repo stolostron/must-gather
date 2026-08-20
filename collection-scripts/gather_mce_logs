@@ -30,9 +30,11 @@ check_managed_clusters() {
 }
 
 gather_service_and_event_logs_for_failed_agents() {
-  gather_dir=${1}
+  local gather_dir=${1}
+  local dir
   agent_cluster_install_list=$(oc get agentclusterinstalls.extensions.hive.openshift.io --all-namespaces -o json)
-  total_installs=$(echo "${agent_cluster_install_list}" | jq '.items | length')
+  total_installs=$(echo "${agent_cluster_install_list}" | jq '.items | length' 2>/dev/null)
+  total_installs=${total_installs:-0}
 
   if [ "${total_installs}" -gt 0 ]; then
     for idx in $(seq 0 $((total_installs - 1))); do
@@ -49,10 +51,12 @@ gather_service_and_event_logs_for_failed_agents() {
 
       logsURL=$(echo "${install_json}" | jq -r '.status.debugInfo.logsURL')
       if [ -n "${logsURL}" ]; then
+        mkdir -p "${dir}"
         curl -k -o "${dir}/${install_name}.logs.tar" "${logsURL}"
       fi
       eventsURL=$(echo "${install_json}" | jq -r '.status.debugInfo.eventsURL')
       if [ -n "${eventsURL}" ]; then
+        mkdir -p "${dir}"
         curl -k -o "${dir}/${install_name}.events" "${eventsURL}"
       fi
     done
