@@ -2,6 +2,8 @@
 
 BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"./must-gather"}
 
+mkdir -p "${BASE_COLLECTION_PATH}"
+
 # log produces a formatted log string with component, level, and message positional arguments:
 # - 1 argument:  Log message (default log level)
 # - 2 arguments: Custom log level and message

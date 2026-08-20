@@ -6,20 +6,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=collection-scripts/gather_utils
 source "${SCRIPT_DIR}/gather_utils"
 
-BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"/must-gather"}
-
-if ! mkdir -p "${BASE_COLLECTION_PATH}"; then
-  log "WARN" "Failed to create base collection directory: ${BASE_COLLECTION_PATH} (defaulting path to: \"./must-gather\")."
-
-  BASE_COLLECTION_PATH="./must-gather"
-  if [[ -d "${BASE_COLLECTION_PATH}" ]]; then
-    log "WARN" "Directory \"${BASE_COLLECTION_PATH}\" already exists. Setting new path to prevent override: \"${BASE_COLLECTION_PATH}-$(date +%Y-%m-%d-%s)\"."
-    BASE_COLLECTION_PATH="${BASE_COLLECTION_PATH}-$(date +%Y-%m-%d-%s)"
-  fi
-
-  mkdir -p "${BASE_COLLECTION_PATH}" && echo -e
-fi
-
 # Set a file path for the gather managed clusters.
 MANAGED_CLUSTER_FILE_PATH=${BASE_COLLECTION_PATH}/gather-managed.log
 
