@@ -11,7 +11,7 @@ WORKDIR /hypershift
 COPY --chown=default external/hypershift .
 RUN make hypershift
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.redhat.io/ubi9/ubi-minimal-pqc:latest
 
 ARG ACM_VERSION
 
