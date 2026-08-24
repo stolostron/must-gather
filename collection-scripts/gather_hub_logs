@@ -105,7 +105,7 @@ if [ -z "${GATHER_HUB_RAN}" ] || [ "${GATHER_HUB_RAN}" != "true" ]; then
   run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
 
   # version information
-  run_inspect clusterversions
+  run_inspect clusterversions.config.openshift.io
   run_inspect clusterserviceversions.operators.coreos.com -n "$HUB_NAMESPACE"
   run_inspect packagemanifests.packages.operators.coreos.com advanced-cluster-management -n openshift-marketplace
 
