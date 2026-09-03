@@ -240,10 +240,10 @@ dump_hostedcluster() {
 
   log "Collecting must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}'"
   hypershift_cmd=("${HYPERSHIFT}" dump cluster --artifact-dir "${BASE_COLLECTION_PATH}" --name "${HC_NAME}" --namespace "${HC_NAMESPACE}")
-  if ! "${hypershift_cmd[@]}" --dump-guest-cluster; then
-    log "WARN" "Failed to collect must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}' using --dump-guest-cluster. Trying --dump-guest-cluster-through-kube-service."
-    if ! "${hypershift_cmd[@]}" --dump-guest-cluster-through-kube-service; then
-      log "ERROR" "Failed to collect must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}' using --dump-guest-cluster-through-kube-service."
+  if ! "${hypershift_cmd[@]}" --dump-guest-cluster=fail-on-error; then
+    log "WARN" "Failed to collect must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}' using --dump-guest-cluster. Trying --dump-guest-cluster=fail-on-error,direct-kube-api-service-access."
+    if ! "${hypershift_cmd[@]}" --dump-guest-cluster=fail-on-error,direct-kube-api-service-access; then
+      log "ERROR" "Failed to collect must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}' using --dump-guest-cluster=fail-on-error,direct-kube-api-service-access."
       return 1
     fi
   fi
