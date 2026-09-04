@@ -48,6 +48,10 @@ gather_spoke
 parse_args "$@"
 dump_hostedcluster
 
+# Hosted Control Planes (Hypershift) information
+run_inspect hostedclusters.hypershift.openshift.io --all-namespaces
+run_inspect nodepools.hypershift.openshift.io --all-namespaces
+
 if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   log "Gathering spoke information for ACM"
   # application resources on managed cluster
