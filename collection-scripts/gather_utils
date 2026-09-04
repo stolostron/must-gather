@@ -172,6 +172,55 @@ parse_args() {
   done
 }
 
+# verify_hypershift_binary confirms dest exists, is a non-empty ELF file, and is executable.
+verify_hypershift_binary() {
+  local bin="${1}"
+  local magic=""
+
+  [[ -s "${bin}" ]] || return 1
+  # read returns non-zero when the first 4 bytes have no newline (expected for ELF).
+  IFS= read -r -n 4 magic < "${bin}" || true
+  [[ "${magic}" == $'\x7fELF' ]] || return 1
+  chmod 755 "${bin}" || return 1
+  [[ -x "${bin}" ]]
+}
+
+# copy_hypershift_via_image_extract pulls /usr/bin/hypershift out of the operator
+# image without requiring tar, rsync, or cat in the running container.
+copy_hypershift_via_image_extract() {
+  local pod_name="${1}"
+  local dest="${2}"
+  local ho_image extract_dir os_arch
+
+  ho_image="$(oc get "${pod_name}" -n hypershift -o json | jq -r '.spec.containers[] | select(.name=="operator") | .image' | head -n 1)"
+  if [[ -z "${ho_image}" || "${ho_image}" == "null" ]]; then
+    ho_image="$(oc get "${pod_name}" -n hypershift -o jsonpath='{.spec.containers[0].image}')"
+  fi
+  if [[ -z "${ho_image}" ]]; then
+    log "WARN" "Unable to determine hypershift operator image for fallback extraction."
+    return 1
+  fi
+
+  os_arch="$(uname -m)"
+  case "${os_arch}" in
+    x86_64) os_arch="amd64" ;;
+    aarch64) os_arch="arm64" ;;
+  esac
+
+  extract_dir="$(mktemp -d /tmp/hypershift-extract.XXXXXX)" || return 1
+  log "Trying to extract hypershift CLI from operator image ${ho_image}"
+  if ! oc image extract "${ho_image}" --path "/usr/bin/hypershift:${extract_dir}" --filter-by-os="linux/${os_arch}" --confirm; then
+    rm -rf "${extract_dir}"
+    return 1
+  fi
+
+  if [[ -f "${extract_dir}/hypershift" ]]; then
+    mv -f "${extract_dir}/hypershift" "${dest}"
+  fi
+  rm -rf "${extract_dir}"
+  [[ -s "${dest}" ]]
+}
+
 ensure_hypershift_cli() {
   # First, check if the container image already contains the /usr/bin/hypershift
   if [ -f /usr/bin/hypershift ]; then
@@ -183,17 +232,20 @@ ensure_hypershift_cli() {
   log "/usr/bin/hypershift is not found. Trying to extract it from the hypershift operator."
 
   # Now, try to extract the hypershift CLI from the hypershift operator
-  if extract_hypershift_cli; then
+  if extract_hypershift_cli && [[ -x /tmp/hypershift ]]; then
     log "Successfully extracted the hypershift CLI binary to /tmp/hypershift."
     export HYPERSHIFT="/tmp/hypershift"
     return 0
   fi
 
-  log "Extracting the hypershift binary from the hypershift operator failed."
+  log "ERROR" "Extracting the hypershift binary from the hypershift operator failed."
+  unset HYPERSHIFT
   return 1
 }
 
 extract_hypershift_cli() {
+  local dest="/tmp/hypershift"
+
   if ! oc get namespace hypershift; then
     log "hypershift namespace not found"
     return 1
@@ -202,17 +254,33 @@ extract_hypershift_cli() {
   # Get a running hypershift operator pod
   HO_POD_NAME=$(oc get pod -n hypershift --no-headers=true --field-selector=status.phase=Running -l app=operator -o name | head -n 1)
 
-  if [[ -n $HO_POD_NAME ]]; then
-    log "Found a running hypershift operator pod: \"$HO_POD_NAME\""
+  if [[ -n "${HO_POD_NAME}" ]]; then
+    log "Found a running hypershift operator pod: \"${HO_POD_NAME}\""
   else
     log "WARN" "No running hypershift operator pod found."
     return 1
   fi
 
-  # Extract the hypershift CLI from the hypershift operator pod
-  oc rsync -c operator -n hypershift "${HO_POD_NAME}:/usr/bin/hypershift" /tmp
-  chmod 755 /tmp/hypershift
-  return 0
+  rm -f "${dest}"
+
+  # Do not use oc rsync/oc cp: hypershift operator images are based on ubi-minimal and
+  # typically omit tar and rsync, so those copy strategies fail with
+  # "No available strategies to copy" while still looking successful.
+  # Prefer oc exec (needs cat) and fall back to oc image extract (needs registry access).
+  log "Copying hypershift CLI from ${HO_POD_NAME} using oc exec"
+  if oc exec -n hypershift -c operator "${HO_POD_NAME}" -- cat /usr/bin/hypershift >"${dest}" &&
+    verify_hypershift_binary "${dest}"; then
+    return 0
+  fi
+  log "WARN" "Failed to copy a usable hypershift CLI from ${HO_POD_NAME} using oc exec."
+  rm -f "${dest}"
+
+  if copy_hypershift_via_image_extract "${HO_POD_NAME}" "${dest}" && verify_hypershift_binary "${dest}"; then
+    return 0
+  fi
+  log "ERROR" "Failed to extract a usable hypershift CLI binary to ${dest}."
+  rm -f "${dest}"
+  return 1
 }
 
 dump_hostedcluster() {
@@ -234,7 +302,7 @@ dump_hostedcluster() {
   fi
   
   if ! ensure_hypershift_cli; then
-    log "ERROR" "Failed to find the hypershift CLI binary."
+    log "ERROR" "Failed to find a usable hypershift CLI binary. Skipping hosted cluster dump for '${HC_NAME}' in namespace '${HC_NAMESPACE}'."
     return 1
   fi
 
