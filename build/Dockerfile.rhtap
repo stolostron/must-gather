@@ -19,7 +19,7 @@ ENV BASE_COLLECTION_PATH=/must-gather \
     USER_UID=1001 \
     USER_NAME=must-gather
 
-RUN microdnf install -y jq tar gzip rsync findutils && \
+RUN microdnf install -y jq tar gzip rsync findutils procps-ng && \
     microdnf clean all
 
 # Copy binaries
