@@ -94,6 +94,10 @@ if [ -z $GATHER_HUB_RAN ] || [ $GATHER_HUB_RAN != true ]; then
     run_inspect ns/"$GLOBALHUB_NAMESPACE"
   fi
 
+  # Hosted Control Planes (Hypershift) information
+  run_inspect hostedclusters.hypershift.openshift.io --all-namespaces
+  run_inspect nodepools.hypershift.openshift.io --all-namespaces
+
   # Multicluster Global Hub Agent information
   run_inspect ns/multicluster-global-hub-agent
   run_inspect ns/open-cluster-management-global-hub-agent-addon
