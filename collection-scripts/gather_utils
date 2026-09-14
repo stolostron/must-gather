@@ -36,8 +36,8 @@ def redact_manifest: (
     .metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"] = "REDACTED"
   else . end) |
   if .kind == "Secret" and .apiVersion == "v1" then
-    (if has("data") then .data |= map_values("REDACTED") else . end) |
-    (if has("stringData") then .stringData |= map_values("REDACTED") else . end) |
+    (if has("data") and (.data|type)=="object" then .data |= map_values("REDACTED") else . end) |
+    (if has("stringData") and (.stringData|type)=="object" then .stringData |= map_values("REDACTED") else . end) |
     (if .metadata.annotations["openshift.io/token-secret.value"] then
       .metadata.annotations["openshift.io/token-secret.value"] = "REDACTED"
     else . end)
