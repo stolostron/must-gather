@@ -26,6 +26,13 @@ pids+=($!)
 
 # Check if PID array has any values, if so, wait for them to finish
 if [ ${#pids[@]} -ne 0 ]; then
+  (
+    while [[ ${thread_count} -ne 1 ]]; do
+      thread_count=$(ps -T -p "${pids[*]}" | wc -l)
+      printf "\n[mch-gather DEBUG]\nUser process count: %s\nCurrent open threads: %s\n%s\n\n" "$(pgrep -cu "$(id -u)")" "$((thread_count - 1))" "$(ps -T -p "${pids[*]}")"
+      sleep 30
+    done
+  ) &
   log "All ACM hub must-gather scripts have started. Waiting on subprocesses to finish execution."
   wait "${pids[@]}"
   log "All ACM hub must-gather scripts have completed."

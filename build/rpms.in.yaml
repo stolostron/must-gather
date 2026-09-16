@@ -10,6 +10,7 @@ packages:
   - gzip
   - rsync
   - findutils
+  - procps-ng
 context:
   containerfile: Dockerfile.rhtap
 arches:

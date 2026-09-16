@@ -87,10 +87,8 @@ if run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-
   run_inspect kafkas.kafka.strimzi.io --all-namespaces
   run_inspect kafkatopics.kafka.strimzi.io --all-namespaces
   run_inspect kafkausers.kafka.strimzi.io --all-namespaces
-  KAFKANS=$(oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
-  for kns in $KAFKANS; do
-    run_inspect ns/"$kns"
-  done
+  mapfile -t KAFKA_NS < <(oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+  run_inspect_batched_by_name namespace "${KAFKA_NS[@]}"
   GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
   # migration
   run_inspect managedclustermigration --all-namespaces

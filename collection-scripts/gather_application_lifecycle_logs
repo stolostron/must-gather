@@ -31,9 +31,7 @@ run_inspect applications.argoproj.io --all-namespaces
 run_inspect applicationsets.argoproj.io --all-namespaces
 run_inspect managedclustersetbinding.cluster.open-cluster-management.io
 run_inspect managedclusterset.cluster.open-cluster-management.io
-ARGONS=$(oc get argocd --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
-for a in $ARGONS; do
-    run_inspect ns/"$a"
-done
+mapfile -t ARGO_NS < <(oc get argocd --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+run_inspect_batched_by_name namespace "${ARGO_NS[@]}"
 run_inspect multiclusterapplicationsetreports.apps.open-cluster-management.io --all-namespaces
 run_inspect clusterpermission.rbac.open-cluster-management.io --all-namespaces

@@ -1,6 +1,7 @@
 #! /bin/bash
 
 BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"./must-gather"}
+BATCH_CONCURRENCY=${BATCH_CONCURRENCY:-25}
 
 mkdir -p "${BASE_COLLECTION_PATH}"
 
@@ -18,8 +19,8 @@ log() {
   fi
 
   case ${lvl} in
-    INFO | WARN | DEBUG | ERROR);;
-    *) lvl="INFO";;
+  INFO | WARN | DEBUG | ERROR) ;;
+  *) lvl="INFO" ;;
   esac
 
   printf "%s\tacm-must-gather\t%s\t%s\n" "${lvl}" "${subscript_name}" "${msg}"
@@ -42,6 +43,68 @@ run_inspect() {
   # shellcheck disable=SC2086
   # - BASE_COLLECTION_PATH can't be quoted because `oc` reads the quotes as part of the path
   oc adm inspect --dest-dir=${BASE_COLLECTION_PATH} "$@"
+}
+
+# run_inspect_batched_by_name inspects each resource by name with up to 25
+# concurrent background jobs, waiting for each batch to finish before starting
+# the next.
+run_inspect_batched_by_name() {
+  local resource_kind="${1}"
+  shift
+
+  if [ "${#}" -eq 0 ]; then
+    return 0
+  fi
+
+  local batch_size=${BATCH_CONCURRENCY}
+  local pids=()
+  local count=0
+
+  for ns in "$@"; do
+    run_inspect "${resource_kind}/${ns}" &
+    pids+=($!)
+    count=$((count + 1))
+    if [ "${count}" -eq "${batch_size}" ]; then
+      wait "${pids[@]}"
+      pids=()
+      count=0
+    fi
+  done
+
+  if [ ${#pids[@]} -gt 0 ]; then
+    wait "${pids[@]}"
+  fi
+}
+
+# run_inspect_batched_by_namespace inspects each resource by namespace with up
+# to 25 concurrent background jobs, waiting for each batch to finish before
+# starting the next.
+run_inspect_batched_by_namespace() {
+  local resource_kind="${1}"
+  shift
+
+  if [ "${#}" -eq 0 ]; then
+    return 0
+  fi
+
+  local batch_size=${BATCH_CONCURRENCY}
+  local pids=()
+  local count=0
+
+  for ns in "$@"; do
+    run_inspect "${resource_kind}" --namespace "${ns}" &
+    pids+=($!)
+    count=$((count + 1))
+    if [ "${count}" -eq "${batch_size}" ]; then
+      wait "${pids[@]}"
+      pids=()
+      count=0
+    fi
+  done
+
+  if [ ${#pids[@]} -gt 0 ]; then
+    wait "${pids[@]}"
+  fi
 }
 
 # Each potentially sensitive kind and "wrapper" kind should have an entry in this definition.
@@ -232,7 +295,7 @@ dump_hostedcluster() {
     log "Must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\" has already been collected."
     return 0
   fi
-  
+
   if ! ensure_hypershift_cli; then
     log "ERROR" "Failed to find the hypershift CLI binary."
     return 1
