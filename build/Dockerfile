@@ -13,6 +13,8 @@ RUN make hypershift
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
+ARG ACM_VERSION
+
 ENV BASE_COLLECTION_PATH=/must-gather \
     USER_UID=1001 \
     USER_NAME=must-gather
@@ -47,4 +49,5 @@ LABEL io.k8s.display-name="ACM Must-gather"
 LABEL io.k8s.description="Must-gather scripts for Red Hat Advanced Cluster Management"
 LABEL com.redhat.component="acm-must-gather-container"
 LABEL io.openshift.tags="data,images"
+LABEL url="https://github.com/stolostron/must-gather"
 LABEL cpe="cpe:/a:redhat:acm:${ACM_VERSION}::el9"
