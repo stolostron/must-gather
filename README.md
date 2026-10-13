@@ -5,6 +5,10 @@ various key resources and namespaces that exist on your cluster. Scripts are she
 in the [`collection-scripts/`](./collection-scripts/) directory. The default/root script is the
 [`gather`](./collection-scripts/gather) script.
 
+The MCE must gather is pulled in as a git submodule. To update the MCE must gather, open a pull
+request in [stolostron/backplane-must-gather](https://github.com/stolostron/backplane-must-gather).
+The change will be automatically synced here once it's merged.
+
 ## Usage
 
 ```sh
