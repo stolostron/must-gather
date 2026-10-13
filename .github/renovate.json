@@ -4,5 +4,16 @@
     "fileMatch": ["build/Dockerfile.rhtap"]
   },
   "schedule": ["* 0-7 * * 1"],
-  "timezone": "America/New_York"
+  "timezone": "America/New_York",
+  "packageRules": [
+    {
+      "matchManagers": ["git-submodules"],
+      "groupName": "Git submodules"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub actions",
+      "pinDigests": true
+    }
+  ]
 }
