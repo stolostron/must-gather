@@ -8,7 +8,9 @@ source "${SCRIPT_DIR}/gather_utils"
 
 log "Starting Disaster Recovery (DR) must-gather"
 
-if run_inspect DRCluster; then
+if ! output=$(oc get DRCluster -o jsonpath='{.items[*].metadata.name}' 2>&1) || [[ -z "${output}" ]]; then
+  log "$(printf "Skipping DR logs collection because there's no DRCluster resources configured:\n\t\t%s" "${output}")"
+else
   if [[ "${GATHER_CONTEXT}" == "true" ]]; then
     "${SCRIPT_DIR}/mce/gather_mce_logs"
     "${SCRIPT_DIR}/gather_hub_logs"
@@ -61,6 +63,4 @@ if run_inspect DRCluster; then
     oc get managedclusterview -n "${managedcluster}" >>"${BASE_COLLECTION_PATH}/Ramen_resources/get_managedclusterview_${managedcluster}"
     oc describe managedclusterview -n "${managedcluster}" >>"${BASE_COLLECTION_PATH}/Ramen_resources/desc_managedclusterview_${managedcluster}"
   done
-else
-  log "Skipping DR logs collection because there's no DRCluster resources configured."
 fi
