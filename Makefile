@@ -13,8 +13,19 @@ clean:
 
 .PHONY: run
 run: clean
-	./collection-scripts/gather
+	$(PWD)/collection-scripts/gather
 
+.PHONY: stop
+stop:
+	@for file in $$(find $(PWD)/collection-scripts -name "gather*") "oc adm inspect"; do \
+		echo "Stopping $$(basename "$$file")"; \
+		pid=$$(ps -ef | grep "$$file" | grep -v grep | awk '{print $$2}'); \
+		if [ -n "$$pid" ]; then \
+			kill $$pid; \
+		fi; \
+	done
+
+.PHONY: kubeconfig
 kubeconfig:
 	oc config view --minify --raw > kubeconfig
 
