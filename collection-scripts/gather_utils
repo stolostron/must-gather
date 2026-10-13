@@ -1,250 +1,30 @@
 #! /bin/bash
 
-BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"./must-gather"}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-mkdir -p "${BASE_COLLECTION_PATH}"
+# shellcheck source=collection-scripts/mce/gather_utils
+source "${SCRIPT_DIR}/mce/gather_utils"
 
-# log produces a formatted log string with component, level, and message positional arguments:
-# - 1 argument:  Log message (default log level)
-# - 2 arguments: Custom log level and message
-log() {
-  lvl="${1}"
-  msg="${2}"
-  subscript_name=$(basename "${0}")
+PRODUCT=${PRODUCT:-acm}
 
-  if [[ "$#" == "1" ]]; then
-    msg="${1}"
-    lvl="INFO"
-  fi
-
-  case ${lvl} in
-    INFO | WARN | DEBUG | ERROR);;
-    *) lvl="INFO";;
-  esac
-
-  printf "%s\tacm-must-gather\t%s\t%s\n" "${lvl}" "${subscript_name}" "${msg}"
-}
-
-# print_header prints an underlined heading with a trailing newline
-print_with_header() {
-  header=${1}
-  content=${2}
-  # shellcheck disable=SC2001
-  underline=$(echo "${header}" | sed 's/./-/g')
-
-  printf "%s\n%s\n%s\n\n" "${header}" "${underline}" "${content}"
-}
-
-# run_inspect wraps `oc adm inspect` by logging the args and running it with common flags
-run_inspect() {
-  args="$*"
-  log "Inspecting ${args}"
-  # shellcheck disable=SC2086
-  # - BASE_COLLECTION_PATH can't be quoted because `oc` reads the quotes as part of the path
-  oc adm inspect --dest-dir=${BASE_COLLECTION_PATH} "$@"
-}
-
-# Each potentially sensitive kind and "wrapper" kind should have an entry in this definition.
-# Using a jq `def` ensures that this can recursively descend through multiple "wrapper" kinds.
-# Separating each kind into a separate `def` would cause problems with how `jq` parses this.
-# The "last-applied-configuration" annotation is always redacted: it could contain sensitive
-# information, and it's easiest to just treat it as noise.
-REDACT_DEF='
-def redact_manifest: (
-  (if .metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"] then
-    .metadata.annotations["kubectl.kubernetes.io/last-applied-configuration"] = "REDACTED"
-  else . end) |
-  if .kind == "Secret" and .apiVersion == "v1" then
-    (if has("data") and (.data|type)=="object" then .data |= map_values("REDACTED") else . end) |
-    (if has("stringData") and (.stringData|type)=="object" then .stringData |= map_values("REDACTED") else . end) |
-    (if .metadata.annotations["openshift.io/token-secret.value"] then
-      .metadata.annotations["openshift.io/token-secret.value"] = "REDACTED"
-    else . end)
-  elif .kind == "Route" and .apiVersion == "route.openshift.io/v1" then
-    (if has("spec") then .spec |= (
-      if .tls then .tls |=
-        (if has("key") then .key = "REDACTED" else . end)
-      else . end
-    ) else . end)
-  elif .kind == "Proxy" and .apiVersion == "config.openshift.io/v1" then
-    (if has("spec") then .spec |= (
-      (if has("httpProxy") then .httpProxy = "REDACTED" else . end) |
-      (if has("httpsProxy") then .httpsProxy = "REDACTED" else . end)
-    ) else . end) |
-    (if has("status") then .status |= (
-      (if has("httpProxy") then .httpProxy = "REDACTED" else . end) |
-      (if has("httpsProxy") then .httpsProxy = "REDACTED" else . end)
-    ) else . end)
-  elif .kind == "OAuthClient" and .apiVersion == "oauth.openshift.io/v1" then
-    (if has("secret") then .secret = "REDACTED" else . end) |
-    (if has("additionalSecrets") then .additionalSecrets |= map("REDACTED") else . end)
-  elif .kind == "ConfigurationPolicy" and .apiVersion == "policy.open-cluster-management.io/v1" then
-    (if .spec["object-templates"] then .spec["object-templates"] |=
-      map(.objectDefinition |= redact_manifest) else . end)
-  elif .kind == "Policy" and .apiVersion == "policy.open-cluster-management.io/v1" then
-    (if .spec["policy-templates"] then .spec["policy-templates"] |=
-      map(.objectDefinition |= redact_manifest) else . end)
-  elif .kind == "AddOnTemplate" and .apiVersion == "addon.open-cluster-management.io/v1alpha1" then
-    (if .spec.agentSpec.workload.manifests then .spec.agentSpec.workload.manifests |=
-      map(redact_manifest) else . end)
-  elif .kind == "ManifestWork" and .apiVersion == "work.open-cluster-management.io/v1" then
-    (if .spec.workload.manifests then .spec.workload.manifests |=
-      map(redact_manifest) else . end)
-  elif .kind == "SyncSet" and .apiVersion == "hive.openshift.io/v1" then
-    (if .spec.resources then .spec.resources |=
-      map(redact_manifest) else . end)
-  elif .kind == "SelectorSyncSet" and .apiVersion == "hive.openshift.io/v1" then
-    (if .spec.resources then .spec.resources |=
-      map(redact_manifest) else . end)
-  else .
-  end
-);
-'
-
-# safe_inspect is meant for "wrapper" resources like ManifestWork and ConfigurationPolicy,
-# which may contain nested resources with sensitive information that should be redacted.
-# Note that the resulting files are stored in the usual places, but are JSON, not YAML.
-# The filter recurses through any nested "wrapper" kind it recognizes, so a Secret
-# in an AddOnTemplate in a ManifestWork is still properly redacted.
-safe_inspect() {
-  local kind="${1}"
-  local api_group="${2}"
-
-  log "Safely inspecting ${kind}.${api_group} --all-namespaces"
-
-  local items
-  items="$(oc get "${kind}.${api_group}" "--all-namespaces" -o json 2>/dev/null)" || return 0
-
-  echo "${items}" | jq -c '.items[]' | while IFS= read -r item; do
-    local ns name
-    ns=$(echo "${item}" | jq -r '.metadata.namespace')
-    name=$(echo "${item}" | jq -r '.metadata.name')
-
-    local dest_dir
-    if [[ "${ns}" == "null" ]]; then
-      dest_dir="${BASE_COLLECTION_PATH}/cluster-scoped-resources/${api_group}/${kind}"
-    else
-      dest_dir="${BASE_COLLECTION_PATH}/namespaces/${ns}/${api_group}/${kind}"
-    fi
-
-    # skip if already collected
-    [ -f "${dest_dir}/${name}.json" ] && continue
-
-    mkdir -p "${dest_dir}"
-
-    # Use an intermediate temporary file to avoid multiple streams to the same file.
-    local tmp_file
-    if ! tmp_file="$(mktemp "${dest_dir}/.${name}.json.XXXXXX")"; then
-      log "ERROR" "Unable to inspect ${dest_dir}/.${name}"
-      continue
-    fi
-
-    if ! jq "${REDACT_DEF}"' redact_manifest' <<<"${item}" >"${tmp_file}"; then
-      log "ERROR" "Unable to inspect ${dest_dir}/.${name}"
-      rm -f "${tmp_file}"
-    else
-      mv -f "${tmp_file}" "${dest_dir}/${name}.json"
-    fi
-  done
-}
-
-# parse_args parses the arguments passed to the must-gather in the form of <key>=<value>.
-# NOTE: Currently this only applies to the Hypershift must-gather.
-parse_args() {
-  # get the hosted cluster name and optionally namespace
-  while [ "${1}" != "" ]; do
-    local key value
-    key=${1%=*}
-    value=${1#*=}
-    case ${key} in
-    hosted-cluster-name) # Get the hosted cluster name
-      export HC_NAME=${value}
-      ;;
-    hosted-cluster-namespace) # Get the hosted cluster namespace
-      export HC_NAMESPACE=${value}
-      ;;
-    *)
-      log "ERROR" "unknown parameter \"${key}\""
-      exit 1
-      ;;
-    esac
-    shift
-  done
-}
-
-ensure_hypershift_cli() {
-  # First, check if the container image already contains the /usr/bin/hypershift
-  if [ -f /usr/bin/hypershift ]; then
-    log "Using hypershift binary at /usr/bin/hypershift."
-    export HYPERSHIFT="/usr/bin/hypershift"
+check_if_hub() {
+  log "Detecting Hub cluster by fetching MCH resource..."
+  if output=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces 2>&1); then
+    log "Detected MCH resource. This cluster has been verified as a hub cluster."
     return 0
   fi
 
-  log "/usr/bin/hypershift is not found. Trying to extract it from the hypershift operator."
-
-  # Now, try to extract the hypershift CLI from the hypershift operator
-  if extract_hypershift_cli; then
-    log "Successfully extracted the hypershift CLI binary to /tmp/hypershift."
-    export HYPERSHIFT="/tmp/hypershift"
-    return 0
-  fi
-
-  log "Extracting the hypershift binary from the hypershift operator failed."
+  log "$(printf "No MCH resource detected on the current cluster. This is not a hub cluster:\n\t\t%s" "${output}")"
   return 1
 }
 
-extract_hypershift_cli() {
-  if ! oc get namespace hypershift; then
-    log "hypershift namespace not found"
-    return 1
-  fi
-
-  # Get a running hypershift operator pod
-  HO_POD_NAME=$(oc get pod -n hypershift --no-headers=true --field-selector=status.phase=Running -l app=operator -o name | head -n 1)
-
-  if [[ -n $HO_POD_NAME ]]; then
-    log "Found a running hypershift operator pod: \"$HO_POD_NAME\""
-  else
-    log "WARN" "No running hypershift operator pod found."
-    return 1
-  fi
-
-  # Extract the hypershift CLI from the hypershift operator pod
-  oc rsync -c operator -n hypershift "${HO_POD_NAME}:/usr/bin/hypershift" /tmp
-  chmod 755 /tmp/hypershift
-  return 0
-}
-
-dump_hostedcluster() {
-  if [[ -z $HC_NAME ]]; then
-    log "Hosted cluster name was not provided. Skip collecting hosted cluster must-gather."
+check_if_acm_spoke() {
+  log "Detecting ACM Managed cluster by fetching Policy CRD..."
+  if output=$(oc get crd policies.policy.open-cluster-management.io 2>&1); then
+    log "The current cluster has policies.policy.open-cluster-management.io crd, it is an ACM spoke cluster."
     return 0
   fi
 
-  HC=$(oc get hostedcluster "${HC_NAME}" -n "${HC_NAMESPACE}")
-  if [[ -z $HC ]]; then
-    log "ERROR" "hosted cluster \"$HC_NAME\" not found in \"$HC_NAMESPACE\" namespace"
-    return 1
-  fi
-
-  # This could be the second time to be here if both MCE and spoke gathers are run.
-  if [ -f "${BASE_COLLECTION_PATH}/hypershift-dump.tar.gz" ]; then
-    log "Must-gather for hosted cluster \"$HC_NAME\" in namespace \"$HC_NAMESPACE\" has already been collected."
-    return 0
-  fi
-  
-  if ! ensure_hypershift_cli; then
-    log "ERROR" "Failed to find the hypershift CLI binary."
-    return 1
-  fi
-
-  log "Collecting must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}'"
-  hypershift_cmd=("${HYPERSHIFT}" dump cluster --artifact-dir "${BASE_COLLECTION_PATH}" --name "${HC_NAME}" --namespace "${HC_NAMESPACE}")
-  if ! "${hypershift_cmd[@]}" --dump-guest-cluster=fail-on-error; then
-    log "WARN" "Failed to collect must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}' using --dump-guest-cluster. Trying --dump-guest-cluster=fail-on-error,direct-kube-api-service-access."
-    if ! "${hypershift_cmd[@]}" --dump-guest-cluster=fail-on-error,direct-kube-api-service-access; then
-      log "ERROR" "Failed to collect must-gather for hosted cluster '${HC_NAME}' in namespace '${HC_NAMESPACE}' using --dump-guest-cluster=fail-on-error,direct-kube-api-service-access."
-      return 1
-    fi
-  fi
+  log "$(printf 'The current cluster does not have policies.policy.open-cluster-management.io crd, it is not an ACM spoke cluster:\n\t\t%s' "${output}")"
+  return 1
 }

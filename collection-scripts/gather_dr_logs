@@ -10,8 +10,8 @@ log "Starting Disaster Recovery (DR) must-gather"
 
 if run_inspect DRCluster; then
   if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-    gather_mce_logs
-    gather_hub_logs
+    "${SCRIPT_DIR}/mce/gather_mce_logs"
+    "${SCRIPT_DIR}/gather_hub_logs"
   fi
   mkdir -p "${BASE_COLLECTION_PATH}/Ramen_resources"
   # Collect logs for oc get mirrorpeers

@@ -11,45 +11,18 @@ export OPERATOR_NAMESPACE=""
 export DEPLOYMENT_NAMESPACE=""
 export HC_NAME=""
 export HC_NAMESPACE="clusters" # default hosted cluster namespace
+export PRODUCT="acm"
+export IS_HUB=false
 
 parse_args "$@"
 
-check_if_engine() {
-  MCE_NAME=$(oc get multiclusterengines.multicluster.openshift.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-  if [[ -n "${MCE_NAME}" ]]; then
-    log "Detected MCE resource: \"${MCE_NAME}\" on current cluster. This cluster has been verified as an engine cluster."
-    OPERATOR_NAMESPACE=$(oc get pod -l control-plane=backplane-operator --all-namespaces --no-headers=true | head -n 1 | awk '{ print $1 }')
-    DEPLOYMENT_NAMESPACE=$(oc get mce "${MCE_NAME}" -o jsonpath='{.spec.targetNamespace}')
-    return 0
-  fi
+pids=()
 
-  log "No MCE resource detected on the current cluster. This is not an engine cluster (Previous errors can be safely ignored)."
-  return 1
-}
-
-check_if_hub() {
-  log "Detecting Hub cluster by fetching MCH resource..."
-  if oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces; then
-    log "Detected MCH resource. This cluster has been verified as a hub cluster."
-    return 0
-  fi
-
-  log "No MCH resource detected on the current cluster. This is not a hub cluster (Previous errors can be safely ignored)."
-  return 1
-}
-
-check_if_spoke() {
-  log "Detecting Managed cluster by fetching Klusterlet CRD..."
-  if oc get crd klusterlets.operator.open-cluster-management.io; then
-    log "The current cluster has klusterlets.operator.open-cluster-management.io crd, it is a spoke cluster."
-    return 0
-  fi
-
-  log "The current cluster does not have klusterlets.operator.open-cluster-management.io crd, it is not a spoke cluster."
-  return 1
-}
+log "Starting ACM must-gather..."
 
 if check_if_engine; then
+  # Spoke collection skips resources this hub gather already records.
+  IS_HUB=true
   if check_if_hub; then
     log "Running ACM MultiClusterHub Must-Gather"
     "${SCRIPT_DIR}/gather_all_logs" &
@@ -57,7 +30,7 @@ if check_if_engine; then
   fi
 
   log "Running MulticlusterEngine Must-Gather"
-  "${SCRIPT_DIR}/gather_mce_logs" &
+  "${SCRIPT_DIR}/mce/gather_mce_logs" &
   pids+=($!)
 fi
 
@@ -66,6 +39,9 @@ if check_if_spoke; then
   "${SCRIPT_DIR}/gather_spoke_logs" &
   pids+=($!)
 fi
+
+dump_hostedcluster &
+pids+=($!)
 
 # Check if PID array has any values, if so, wait for them to finish
 if [ ${#pids[@]} -ne 0 ]; then

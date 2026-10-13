@@ -65,7 +65,7 @@ Let us go through what is collected:
    namespaces (that we have decided to collect)
 2. The data is further organized by API group for the custom resource definitions. This is true for
    both cluster scope and namespace scoped resources.
-3. And we can see the Kind for the custom resource defintions.
+3. And we can see the Kind for the custom resource definitions.
 4. At the leaf level, we can see the `yaml for each of the custom resources for the kind`
 5. This log contains the output of `kubectl get pods -n $NAMESPACE-IN-WHICH-OCM-RUNS-ON-HUB`.
 6. If run on the Open-Cluster-Management Hub Server, the list of Managed Clusters configured and
