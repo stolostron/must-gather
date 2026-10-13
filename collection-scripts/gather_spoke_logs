@@ -25,7 +25,6 @@ gather_acm_spoke() {
 
   safe_inspect policies policy.open-cluster-management.io
   run_inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces
-  run_inspect iampolicies.policy.open-cluster-management.io --all-namespaces
   safe_inspect configurationpolicies policy.open-cluster-management.io
   run_inspect operatorpolicies.policy.open-cluster-management.io --all-namespaces
 
