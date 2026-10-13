@@ -1,3 +1,20 @@
-# Symlinks into the backplane-must-gather submodule. The Dockerfiles copy the
-# real files so the image does not contain broken symlinks.
+# Directory with symlinks into the backplane-must-gather submodule. The
+# Dockerfiles copy the real files so the image does not contain broken symlinks.
 collection-scripts/mce
+
+# Hypershift build directories (exclude all and then re-include)
+backplane-must-gather/external/hypershift
+!backplane-must-gather/external/hypershift/api
+!backplane-must-gather/external/hypershift/cmd
+!backplane-must-gather/external/hypershift/pkg
+!backplane-must-gather/external/hypershift/support
+!backplane-must-gather/external/hypershift/vendor
+!backplane-must-gather/external/hypershift/kubevirtexternalinfra
+!backplane-must-gather/external/hypershift/hypershift-operator
+!backplane-must-gather/external/hypershift/control-plane-operator/controllers/hostedcontrolplane
+backplane-must-gather/external/hypershift/control-plane-operator/controllers/hostedcontrolplane/testdata
+# Hypershift build files
+!backplane-must-gather/external/hypershift/go.mod
+!backplane-must-gather/external/hypershift/go.sum
+!backplane-must-gather/external/hypershift/Makefile
+!backplane-must-gather/external/hypershift/main.go
