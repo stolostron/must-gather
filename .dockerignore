@@ -1,0 +1,3 @@
+# Symlinks into the backplane-must-gather submodule. The Dockerfiles copy the
+# real files so the image does not contain broken symlinks.
+collection-scripts/mce

@@ -30,7 +30,7 @@ spec:
     - name: hermetic
       value: 'true'
     - name: prefetch-input
-      value: '[{"type": "rpm", "path": "build"},{"type": "gomod", "path": "backplane-must-gather"},{"type": "gomod", "path": "backplane-must-gather/external/hypershift"}]'
+      value: '[{"type": "rpm", "path": "build"},{"type": "gomod", "path": "backplane-must-gather/external/hypershift"}]'
     - name: build-source-image
       value: 'true'
     - name: build-platforms
