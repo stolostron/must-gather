@@ -12,7 +12,9 @@ export DEPLOYMENT_NAMESPACE=""
 export HC_NAME=""
 export HC_NAMESPACE="clusters" # default hosted cluster namespace
 export PRODUCT="acm"
+export IS_ENGINE=false
 export IS_HUB=false
+export IS_OBS_HUB=false
 
 parse_args "$@"
 
@@ -21,9 +23,14 @@ pids=()
 log "Starting ACM must-gather..."
 
 if check_if_engine; then
-  # Spoke collection skips resources this hub gather already records.
-  IS_HUB=true
+  IS_ENGINE=true
+
   if check_if_hub; then
+    IS_HUB=true
+    if check_if_obs_hub; then
+      IS_OBS_HUB=true
+    fi
+
     log "Running ACM MultiClusterHub Must-Gather"
     "${SCRIPT_DIR}/gather_all_logs" &
     pids+=($!)

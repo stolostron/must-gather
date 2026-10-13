@@ -6,30 +6,34 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=collection-scripts/gather_utils
 source "${SCRIPT_DIR}/gather_utils"
 
-log "Starting Observability must-gather"
-
 if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-    "${SCRIPT_DIR}/mce/gather_mce_logs"
-    "${SCRIPT_DIR}/gather_hub_logs"
+  "${SCRIPT_DIR}/mce/gather_mce_logs"
+  "${SCRIPT_DIR}/gather_hub_logs"
 fi
 
-MCO_NAME=$(oc get multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-if [[ -n "$MCO_NAME" ]]; then
-    run_inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces
-    run_inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces
-    run_inspect ns/open-cluster-management-observability
-    run_inspect observatoria.core.observatorium.io --all-namespaces
-    # user workload metrics config - collect observability-metrics-custom-allowlist across all namespaces
-    OBSERVABILITY_NAMESPACES=$(oc get configmap --all-namespaces --field-selector=metadata.name=observability-metrics-custom-allowlist -o jsonpath='{.items[*].metadata.namespace}')
-    for namespace in ${OBSERVABILITY_NAMESPACES}; do
-      run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
-    done
-    # Cluster and user workload monitoring config for alert forwarding
-    run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
-    run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
-    # MCOA resources
-    run_inspect prometheusagents.monitoring.rhobs -n open-cluster-management-observability
-    run_inspect prometheusrules.monitoring.coreos.com -n open-cluster-management-observability
-    run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
-    run_inspect ns/openshift-cluster-observability-operator
+if [[ -z "${IS_OBS_HUB}" ]]; then
+  if check_if_obs_hub; then
+    IS_OBS_HUB=true
+  fi
+fi
+
+if [[ "${IS_OBS_HUB:-false}" == "true" ]]; then
+  log "Starting Observability must-gather"
+  run_inspect observabilityaddons.observability.open-cluster-management.io --all-namespaces
+  run_inspect multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces
+  run_inspect ns/open-cluster-management-observability
+  run_inspect observatoria.core.observatorium.io --all-namespaces
+  # user workload metrics config - collect observability-metrics-custom-allowlist across all namespaces
+  OBSERVABILITY_NAMESPACES=$(oc get configmap --all-namespaces --field-selector=metadata.name=observability-metrics-custom-allowlist -o jsonpath='{.items[*].metadata.namespace}')
+  for namespace in ${OBSERVABILITY_NAMESPACES}; do
+    run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
+  done
+  # Cluster and user workload monitoring config for alert forwarding
+  run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
+  run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
+  # MCOA resources
+  run_inspect prometheusagents.monitoring.rhobs -n open-cluster-management-observability
+  run_inspect prometheusrules.monitoring.coreos.com -n open-cluster-management-observability
+  run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
+  run_inspect ns/openshift-cluster-observability-operator
 fi
