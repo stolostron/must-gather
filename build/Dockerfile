@@ -1,5 +1,3 @@
-ARG ACM_VERSION=${ACM_VERSION}
-
 # Copyright (c) 2021 Red Hat, Inc.
 # Copyright Contributors to the Open Cluster Management project
 
@@ -8,7 +6,7 @@ FROM quay.io/openshift/origin-cli:latest AS oc-cli
 FROM registry.access.redhat.com/ubi9/go-toolset:latest AS hypershift-cli
 
 WORKDIR /hypershift
-COPY --chown=default external/hypershift .
+COPY --chown=default backplane-must-gather/external/hypershift .
 RUN make hypershift
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
@@ -30,15 +28,20 @@ COPY --from=hypershift-cli /hypershift/bin/hypershift /usr/bin/hypershift
 RUN mkdir licenses/
 COPY LICENSE licenses/
 
-# copy all collection scripts to /usr/bin
-COPY ./collection-scripts/* /usr/bin/
+# Copy ACM collection scripts
+COPY ./collection-scripts/ /usr/bin/
+# Copy MCE collection scripts from submodule
+COPY ./backplane-must-gather/collection-scripts/gather_utils \
+     ./backplane-must-gather/collection-scripts/gather_mce_logs \
+     ./backplane-must-gather/collection-scripts/gather_mce_spoke_logs \
+     /usr/bin/mce/
 
 # Setup non-root user
 COPY ./build/user_setup /usr/local/bin/
 RUN  /usr/local/bin/user_setup
 USER 1001
 
-ENTRYPOINT /usr/bin/gather
+ENTRYPOINT ["/usr/bin/gather"]
 
 LABEL name="rhacm2/acm-must-gather-rhel9"
 LABEL summary="Must-gather scripts for Red Hat Advanced Cluster Management"
@@ -47,4 +50,3 @@ LABEL io.k8s.display-name="ACM Must-gather"
 LABEL io.k8s.description="Must-gather scripts for Red Hat Advanced Cluster Management"
 LABEL com.redhat.component="acm-must-gather-container"
 LABEL io.openshift.tags="data,images"
-LABEL cpe="cpe:/a:redhat:acm:${ACM_VERSION}::el9"

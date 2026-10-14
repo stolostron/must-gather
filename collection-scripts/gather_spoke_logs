@@ -9,79 +9,23 @@ source "${SCRIPT_DIR}/gather_utils"
 HC_NAME=${HC_NAME:-""}
 HC_NAMESPACE=${HC_NAMESPACE:-"clusters"}
 
-gather_spoke() {
-  # collect CRDs to aid automated must-gather readers
-  log "Gathering spoke information for MCE"
-  run_inspect customresourcedefinition.apiextensions.k8s.io
-
-  run_inspect klusterlets.operator.open-cluster-management.io --all-namespaces
-  run_inspect clusterclaims.cluster.open-cluster-management.io --all-namespaces
-  run_inspect appliedmanifestworks.work.open-cluster-management.io --all-namespaces
-
-  KLUSTERLETS_NAMES=$(oc get klusterlets.operator.open-cluster-management.io -o name)
-  for name in ${KLUSTERLETS_NAMES}; do
-    local agent_namespace
-    local mode
-    mode=$(oc get "$name" -o jsonpath='{.spec.deployOption.mode}')
-    log "klusterlet $name is deployed in $mode mode"
-    if [ "$mode" = 'Hosted' ] || [ "$mode" = 'SingletonHosted' ]; then
-      agent_namespace=$name
-    else
-      agent_namespace=$(oc get "$name" -o jsonpath='{.spec.namespace}')
-    fi
-
-    log "klusterlet name: $name, agent namespace: $agent_namespace"
-    run_inspect ns/"$agent_namespace"
-  done
-
-  # gather all the customized addon namespaces
-  run_inspect ns/"open-cluster-management-agent-addon"
-  CUSTOMIZED_ADDON_NAMESPACES=$(oc get ns -l addon.open-cluster-management.io/namespace=true --no-headers=true -o custom-columns="NAME:.metadata.name")
-  for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES}; do
-    run_inspect ns/"$addon_namespace"
-  done
-
-  run_inspect ns/openshift-operators # gatekeeper and volsync operator will be installed in this ns in production
-}
-
-gather_observability() {
-  log "Gathering Observability resources"
-  run_inspect ns/open-cluster-management-addon-observability
-
-  # user workload metrics config - collect observability-metrics-custom-allowlist across all namespaces
-  OBSERVABILITY_NAMESPACES=$(oc get configmap --all-namespaces --field-selector=metadata.name=observability-metrics-custom-allowlist -o jsonpath='{.items[*].metadata.namespace}')
-  for namespace in ${OBSERVABILITY_NAMESPACES}; do
-    run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
-  done
-
-  # MCOA resources
-  for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES}; do
-    run_inspect prometheusagents.monitoring.rhobs -n "$addon_namespace"
-    run_inspect prometheusrules.monitoring.coreos.com -n "$addon_namespace"
-  done
-  run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
-  run_inspect ns/openshift-cluster-observability-operator
-
-  # Cluster and user workload monitoring config for alert forwarding
-  run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
-  run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
-}
-
-log "Starting Managed cluster must-gather"
-gather_spoke
-gather_observability
-parse_args "$@"
-dump_hostedcluster
-
-# Hosted Control Planes (Hypershift) information
-run_inspect hostedclusters.hypershift.openshift.io --all-namespaces
-run_inspect nodepools.hypershift.openshift.io --all-namespaces
-
-if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
+gather_acm_spoke() {
   log "Gathering spoke information for ACM"
+
+  if [[ "${IS_ENGINE:-false}" == "false" ]]; then
+    # Version info
+    run_inspect clusterversions
+    # Get disconnected information
+    run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
+  fi
+
+  if [[ "${IS_HUB:-false}" == "false" ]]; then
+    run_inspect helmreleases.apps.open-cluster-management.io --all-namespaces
+    run_inspect subscriptions.apps.open-cluster-management.io --all-namespaces
+    safe_inspect policies policy.open-cluster-management.io
+  fi
+
   # application resources on managed cluster
-  run_inspect subscriptions.apps.open-cluster-management.io --all-namespaces
-  run_inspect helmreleases.apps.open-cluster-management.io --all-namespaces
   run_inspect subscriptionstatus.apps.open-cluster-management.io --all-namespaces
 
   run_inspect workmanagers.agent.open-cluster-management.io --all-namespaces
@@ -91,9 +35,7 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   run_inspect policycontrollers.agent.open-cluster-management.io --all-namespaces
   run_inspect searchcollectors.agent.open-cluster-management.io --all-namespaces
 
-  safe_inspect policies policy.open-cluster-management.io
   run_inspect certificatepolicies.policy.open-cluster-management.io --all-namespaces
-  run_inspect iampolicies.policy.open-cluster-management.io --all-namespaces
   safe_inspect configurationpolicies policy.open-cluster-management.io
   run_inspect operatorpolicies.policy.open-cluster-management.io --all-namespaces
 
@@ -106,17 +48,50 @@ if oc get crd policies.policy.open-cluster-management.io &>/dev/null; then
   run_inspect replicationdestinations.volsync.backube --all-namespaces
   run_inspect replicationsources.volsync.backube --all-namespaces
 
-  run_inspect ns/openshift-operators # gatekeeper and volsync operator will be installed in this ns in production
   run_inspect ns/openshift-gatekeeper-system
   run_inspect ns/openshift-gatekeeper-operator
   run_inspect ns/open-cluster-management-policies
 
   # Submariner logs
   run_inspect ns/submariner-operator
+}
 
-  # Get disconnected information
-  run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
+gather_observability() {
+  log "Gathering Observability resources"
+  run_inspect ns/open-cluster-management-addon-observability
 
-  # Version info
-  run_inspect clusterversions
+  if [[ "${IS_OBS_HUB:-false}" == "false" ]]; then
+    run_inspect ns/openshift-cluster-observability-operator
+
+    # Cluster and user workload monitoring config for alert forwarding
+    run_inspect configmap/cluster-monitoring-config -n openshift-monitoring
+    run_inspect configmap/user-workload-monitoring-config -n openshift-user-workload-monitoring
+
+    # user workload metrics config - collect observability-metrics-custom-allowlist across all namespaces
+    OBSERVABILITY_NAMESPACES=$(oc get configmap --all-namespaces --field-selector=metadata.name=observability-metrics-custom-allowlist -o jsonpath='{.items[*].metadata.namespace}')
+    for namespace in ${OBSERVABILITY_NAMESPACES}; do
+      run_inspect configmap/observability-metrics-custom-allowlist -n "${namespace}"
+    done
+
+    run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
+  fi
+
+  # MCOA resources
+  CUSTOMIZED_ADDON_NAMESPACES=$(oc get ns -l addon.open-cluster-management.io/namespace=true --no-headers=true -o custom-columns="NAME:.metadata.name")
+  for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES}; do
+    run_inspect prometheusagents.monitoring.rhobs -n "$addon_namespace"
+    run_inspect prometheusrules.monitoring.coreos.com -n "$addon_namespace"
+  done
+}
+
+log "Starting Managed cluster must-gather"
+
+# MCE spoke gather
+"${SCRIPT_DIR}/mce/gather_mce_spoke_logs"
+
+gather_observability
+
+# ACM spoke gather
+if check_if_acm_spoke; then
+  gather_acm_spoke
 fi

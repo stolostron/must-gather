@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source "${SCRIPT_DIR}/gather_utils"
 
 if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-  "${SCRIPT_DIR}/gather_mce_logs"
+  "${SCRIPT_DIR}/mce/gather_mce_logs"
 fi
 
 log "Starting ACM Hub cluster must-gather"
@@ -81,8 +81,8 @@ run_inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-n
 run_inspect brokers.submariner.io --all-namespaces
 
 # Multicluster GlobalHub information
-
-if run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces; then
+if check_if_globalhub; then
+  run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces
   # kafka
   run_inspect kafkas.kafka.strimzi.io --all-namespaces
   run_inspect kafkatopics.kafka.strimzi.io --all-namespaces
@@ -98,22 +98,18 @@ if run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-
   run_inspect ns/"$GLOBALHUB_NAMESPACE"
 fi
 
-# Hosted Control Planes (Hypershift) information
-run_inspect hostedclusters.hypershift.openshift.io --all-namespaces
-run_inspect nodepools.hypershift.openshift.io --all-namespaces
-
 # Multicluster Global Hub Agent information
 run_inspect ns/multicluster-global-hub-agent
 run_inspect ns/open-cluster-management-global-hub-agent-addon
 
-# Get disconnected information
-run_inspect imagecontentsourcepolicies.operator.openshift.io --all-namespaces
-
 # version information
-run_inspect clusterversions
 run_inspect clusterserviceversions.operators.coreos.com -n "$HUB_NAMESPACE"
 run_inspect packagemanifests.packages.operators.coreos.com advanced-cluster-management -n openshift-marketplace
 
 # OpenShift console plug-in enablement
 run_inspect consoles.operator.openshift.io
 run_inspect consoleplugins.console.openshift.io
+
+# Hosted Control Planes (Hypershift) information
+run_inspect hostedclusters.hypershift.openshift.io --all-namespaces
+run_inspect nodepools.hypershift.openshift.io --all-namespaces

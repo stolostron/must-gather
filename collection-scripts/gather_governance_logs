@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/gather_utils"
 log "Starting Governance Policy Framework (GRC) must-gather"
 
 if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-    "${SCRIPT_DIR}/gather_mce_logs"
+    "${SCRIPT_DIR}/mce/gather_mce_logs"
     "${SCRIPT_DIR}/gather_hub_logs"
 fi
 
