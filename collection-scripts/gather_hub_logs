@@ -80,8 +80,10 @@ if [ -z "${GATHER_HUB_RAN}" ] || [ "${GATHER_HUB_RAN}" != "true" ]; then
   run_inspect brokers.submariner.io --all-namespaces
 
   # Multicluster GlobalHub information
-
-  if run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces; then
+  if ! output=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces -o jsonpath='{.items[*].metadata.name}' 2>&1) || [[ -z "${output}" ]]; then
+    log "$(printf "Skipping GlobalHub logs collection because there's no GlobalHub resources configured:\n\t\t%s" "${output}")"
+  else
+    run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces
     # kafka
     run_inspect kafkas.kafka.strimzi.io --all-namespaces
     run_inspect kafkatopics.kafka.strimzi.io --all-namespaces
