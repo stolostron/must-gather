@@ -36,4 +36,7 @@ if [[ "${IS_OBS_HUB:-false}" == "true" ]]; then
   run_inspect prometheusrules.monitoring.coreos.com -n open-cluster-management-observability
   run_inspect scrapeconfigs.monitoring.rhobs --all-namespaces
   run_inspect ns/openshift-cluster-observability-operator
+  # MCOA managed logstore resources
+  run_inspect clusterlogforwarders.observability.openshift.io --all-namespaces
+  run_inspect lokistacks.loki.grafana.com --all-namespaces
 fi

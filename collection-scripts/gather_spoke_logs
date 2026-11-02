@@ -81,6 +81,7 @@ gather_observability() {
   for addon_namespace in ${CUSTOMIZED_ADDON_NAMESPACES}; do
     run_inspect prometheusagents.monitoring.rhobs -n "$addon_namespace"
     run_inspect prometheusrules.monitoring.coreos.com -n "$addon_namespace"
+    run_inspect clusterlogforwarders.observability.openshift.io -n "$addon_namespace"
   done
 }
 
