@@ -11,10 +11,6 @@ log "Starting Disaster Recovery (DR) must-gather"
 if ! output=$(oc get DRCluster -o jsonpath='{.items[*].metadata.name}' 2>&1) || [[ -z "${output}" ]]; then
   log "$(printf "Skipping DR logs collection because there's no DRCluster resources configured:\n\t\t%s" "${output}")"
 else
-  if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-    "${SCRIPT_DIR}/mce/gather_mce_logs"
-    "${SCRIPT_DIR}/gather_hub_logs"
-  fi
   mkdir -p "${BASE_COLLECTION_PATH}/Ramen_resources"
   # Collect logs for oc get mirrorpeers
   COMMAND_OUTPUT_FILE=${BASE_COLLECTION_PATH}/Ramen_resources/get_mirrorpeers

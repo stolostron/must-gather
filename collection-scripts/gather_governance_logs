@@ -8,11 +8,6 @@ source "${SCRIPT_DIR}/gather_utils"
 
 log "Starting Governance Policy Framework (GRC) must-gather"
 
-if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-    "${SCRIPT_DIR}/mce/gather_mce_logs"
-    "${SCRIPT_DIR}/gather_hub_logs"
-fi
-
 safe_inspect policies policy.open-cluster-management.io
 run_inspect policysets.policy.open-cluster-management.io --all-namespaces
 run_inspect policyautomations.policy.open-cluster-management.io --all-namespaces

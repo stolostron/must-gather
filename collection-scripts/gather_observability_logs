@@ -6,11 +6,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=collection-scripts/gather_utils
 source "${SCRIPT_DIR}/gather_utils"
 
-if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-  "${SCRIPT_DIR}/mce/gather_mce_logs"
-  "${SCRIPT_DIR}/gather_hub_logs"
-fi
-
 if [[ -z "${IS_OBS_HUB}" ]]; then
   if check_if_obs_hub; then
     IS_OBS_HUB=true
