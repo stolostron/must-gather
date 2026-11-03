@@ -5,6 +5,11 @@ PRODUCT=${PRODUCT:-acm}
 
 # shellcheck source=collection-scripts/mce/gather_utils
 source "${SCRIPT_DIR}/mce/gather_utils"
+
+get_acm_hub_namespace() {
+  oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces -o jsonpath='{.items[*].metadata.namespace}'
+}
+
 export CONTEXT_GATHERED=${CONTEXT_GATHERED:-"false"}
 
 if [[ -n "${GATHER_CONTEXT}" ]] && [[ "${CONTEXT_GATHERED}" == "false" ]]; then
@@ -14,6 +19,9 @@ if [[ -n "${GATHER_CONTEXT}" ]] && [[ "${CONTEXT_GATHERED}" == "false" ]]; then
     "${SCRIPT_DIR}/mce/gather_mce_logs"
     "${SCRIPT_DIR}/gather_hub_logs"
     ;;
+  "minimal")
+    run_inspect ns/"$(get_acm_hub_namespace)"
+    ;;
   *)
     log "WARN" "Invalid GATHER_CONTEXT value: ${GATHER_CONTEXT}"
     ;;
@@ -22,7 +30,7 @@ fi
 
 check_if_hub() {
   log "Detecting Hub cluster by fetching MultiClusterHub (MCH) resource..."
-  if output=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces -o jsonpath='{.items[*].metadata.name}' 2>&1) && [[ -n "${output}" ]]; then
+  if output=$(get_acm_hub_namespace 2>&1) && [[ -n "${output}" ]]; then
     log "Detected MCH resource. This cluster has been verified as a hub cluster."
     return 0
   fi
