@@ -8,11 +8,6 @@ source "${SCRIPT_DIR}/gather_utils"
 
 log "Starting Application lifecycle must-gather"
 
-if [[ "${GATHER_CONTEXT}" == "true" ]]; then
-    "${SCRIPT_DIR}/mce/gather_mce_logs"
-    "${SCRIPT_DIR}/gather_hub_logs"
-fi
-
 # application resources
 run_inspect applications.app.k8s.io --all-namespaces
 run_inspect channels.apps.open-cluster-management.io --all-namespaces

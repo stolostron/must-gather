@@ -5,6 +5,20 @@ PRODUCT=${PRODUCT:-acm}
 
 # shellcheck source=collection-scripts/mce/gather_utils
 source "${SCRIPT_DIR}/mce/gather_utils"
+export CONTEXT_GATHERED=${CONTEXT_GATHERED:-"false"}
+
+if [[ -n "${GATHER_CONTEXT}" ]] && [[ "${CONTEXT_GATHERED}" == "false" ]]; then
+  CONTEXT_GATHERED="true"
+  case "${GATHER_CONTEXT}" in
+  "true")
+    "${SCRIPT_DIR}/mce/gather_mce_logs"
+    "${SCRIPT_DIR}/gather_hub_logs"
+    ;;
+  *)
+    log "WARN" "Invalid GATHER_CONTEXT value: ${GATHER_CONTEXT}"
+    ;;
+  esac
+fi
 
 check_if_hub() {
   log "Detecting Hub cluster by fetching MultiClusterHub (MCH) resource..."
