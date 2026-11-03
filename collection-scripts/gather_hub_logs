@@ -54,49 +54,12 @@ run_inspect ansiblejobs.tower.ansible.com --all-namespaces
 # Fine Grained RBAC CRs
 run_inspect multiclusterroleassignments.rbac.open-cluster-management.io --all-namespaces
 
-# Backup and Restore chart,  OADP Operator and Velero CRs
-run_inspect restores.cluster.open-cluster-management.io --all-namespaces
-run_inspect backupschedules.cluster.open-cluster-management.io --all-namespaces
-run_inspect dataprotectionapplications.oadp.openshift.io --all-namespaces
-run_inspect backupstoragelocations.velero.io --all-namespaces
-run_inspect backuprepositories.velero.io --all-namespaces
-run_inspect deletebackuprequests.velero.io --all-namespaces
-run_inspect downloadrequests.velero.io --all-namespaces
-run_inspect podvolumebackups.velero.io --all-namespaces
-run_inspect podvolumerestores.velero.io --all-namespaces
-run_inspect volumesnapshotlocations.velero.io --all-namespaces
-run_inspect schedules.velero.io --all-namespaces
-run_inspect backups.velero.io --all-namespaces
-run_inspect restores.velero.io --all-namespaces
-
 # SiteConfig Operator CRs
 run_inspect clusterinstances.siteconfig.open-cluster-management.io --all-namespaces
 
 # Submariner Addon CRs
 run_inspect submarinerconfigs.submarineraddon.open-cluster-management.io --all-namespaces
 run_inspect brokers.submariner.io --all-namespaces
-
-# Multicluster GlobalHub information
-if check_if_globalhub; then
-  run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces
-  # kafka
-  run_inspect kafkas.kafka.strimzi.io --all-namespaces
-  run_inspect kafkatopics.kafka.strimzi.io --all-namespaces
-  run_inspect kafkausers.kafka.strimzi.io --all-namespaces
-  KAFKANS=$(oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
-  for kns in $KAFKANS; do
-    run_inspect ns/"$kns"
-  done
-  GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
-  # migration
-  run_inspect managedclustermigration --all-namespaces
-  log "GlobalHub namespace: $GLOBALHUB_NAMESPACE"
-  run_inspect ns/"$GLOBALHUB_NAMESPACE"
-fi
-
-# Multicluster Global Hub Agent information
-run_inspect ns/multicluster-global-hub-agent
-run_inspect ns/open-cluster-management-global-hub-agent-addon
 
 # version information
 run_inspect clusterserviceversions.operators.coreos.com -n "$HUB_NAMESPACE"

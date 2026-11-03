@@ -1,0 +1,24 @@
+#! /bin/bash
+# Copyright (c) 2023 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=collection-scripts/gather_utils
+source "${SCRIPT_DIR}/gather_utils"
+
+log "Starting VolSync (backup/restore) must-gather"
+
+# Backup and Restore chart, OADP Operator, and Velero CRs
+run_inspect restores.cluster.open-cluster-management.io --all-namespaces
+run_inspect backupschedules.cluster.open-cluster-management.io --all-namespaces
+run_inspect dataprotectionapplications.oadp.openshift.io --all-namespaces
+run_inspect backupstoragelocations.velero.io --all-namespaces
+run_inspect backuprepositories.velero.io --all-namespaces
+run_inspect deletebackuprequests.velero.io --all-namespaces
+run_inspect downloadrequests.velero.io --all-namespaces
+run_inspect podvolumebackups.velero.io --all-namespaces
+run_inspect podvolumerestores.velero.io --all-namespaces
+run_inspect volumesnapshotlocations.velero.io --all-namespaces
+run_inspect schedules.velero.io --all-namespaces
+run_inspect backups.velero.io --all-namespaces
+run_inspect restores.velero.io --all-namespaces

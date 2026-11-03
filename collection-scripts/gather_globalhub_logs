@@ -1,0 +1,30 @@
+#! /bin/bash
+# Copyright (c) 2023 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=collection-scripts/gather_utils
+source "${SCRIPT_DIR}/gather_utils"
+
+log "Starting Multicluster Global Hub must-gather"
+
+if check_if_globalhub; then
+  GLOBALHUB_NAMESPACE=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces -o jsonpath='{.items[*].metadata.namespace}')
+  log "GlobalHub namespace: $GLOBALHUB_NAMESPACE"
+  run_inspect ns/"$GLOBALHUB_NAMESPACE"
+  run_inspect multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces
+  # kafka
+  run_inspect kafkas.kafka.strimzi.io --all-namespaces
+  run_inspect kafkatopics.kafka.strimzi.io --all-namespaces
+  run_inspect kafkausers.kafka.strimzi.io --all-namespaces
+  KAFKANS=$(oc get kafkas.kafka.strimzi.io --all-namespaces --no-headers=true -o custom-columns=NAMESPACE:.metadata.namespace | sort -u)
+  for kns in $KAFKANS; do
+    run_inspect ns/"$kns"
+  done
+  # migration
+  run_inspect managedclustermigration --all-namespaces
+fi
+
+# Multicluster Global Hub Agent information
+run_inspect ns/multicluster-global-hub-agent
+run_inspect ns/open-cluster-management-global-hub-agent-addon
