@@ -113,7 +113,9 @@ make run
 ```
 
 **NOTE:** This invokes the [`collection-scripts/gather`](./collection-scripts/gather) script. Each
-of the sub-scripts can alternatively be invoked individually.
+of the sub-scripts can alternatively be invoked individually. When running a script individually,
+you can specify `GATHER_CONTEXT` with either `true` to also run the full ACM/MCE gather scripts or
+`minimal` to only inspect the ACM namespace.
 
 You can also build and run the image locally:
 

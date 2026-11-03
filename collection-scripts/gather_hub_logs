@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 source "${SCRIPT_DIR}/gather_utils"
 
 log "Starting ACM Hub cluster must-gather"
-HUB_NAMESPACE=$(oc get multiclusterhubs.operator.open-cluster-management.io --all-namespaces --no-headers=true | awk '{ print $1 }')
+HUB_NAMESPACE=$(get_acm_hub_namespace)
 log "Hub namespace: ${HUB_NAMESPACE}"
 {
   print_with_header "Openshift CLI version" "$(oc version)"
