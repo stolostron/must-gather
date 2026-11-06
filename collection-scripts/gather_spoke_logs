@@ -60,6 +60,14 @@ gather_observability() {
   log "Gathering Observability resources"
   run_inspect ns/open-cluster-management-addon-observability
 
+  # CLO and the MCOA ClusterLogForwarder are installed outside the addon namespaces collected below.
+  run_inspect ns/openshift-logging
+  run_inspect clusterlogforwarders.observability.openshift.io -n openshift-logging
+  run_inspect subscriptions.operators.coreos.com -n openshift-logging
+  run_inspect clusterserviceversions.operators.coreos.com -n openshift-logging
+  run_inspect installplans.operators.coreos.com -n openshift-logging
+  run_inspect operatorgroups.operators.coreos.com -n openshift-logging
+
   if [[ "${IS_OBS_HUB:-false}" == "false" ]]; then
     run_inspect ns/openshift-cluster-observability-operator
 
