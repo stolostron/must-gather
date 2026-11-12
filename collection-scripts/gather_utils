@@ -1,7 +1,7 @@
 #! /bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-PRODUCT=${PRODUCT:-acm}
+export PRODUCT=${PRODUCT:-acm}
 
 # shellcheck source=collection-scripts/mce/gather_utils
 source "${SCRIPT_DIR}/mce/gather_utils"
@@ -14,18 +14,27 @@ export CONTEXT_GATHERED=${CONTEXT_GATHERED:-"false"}
 
 if [[ -n "${GATHER_CONTEXT}" ]] && [[ "${CONTEXT_GATHERED}" == "false" ]]; then
   CONTEXT_GATHERED="true"
+  pids=()
   case "${GATHER_CONTEXT}" in
   "true")
-    "${SCRIPT_DIR}/mce/gather_mce_logs"
-    "${SCRIPT_DIR}/gather_hub_logs"
+    "${SCRIPT_DIR}/mce/gather_mce_logs" &
+    pids+=($!)
+    "${SCRIPT_DIR}/gather_hub_logs" &
+    pids+=($!)
     ;;
   "minimal")
-    run_inspect ns/"$(get_acm_hub_namespace)"
+    run_inspect ns/"$(get_acm_hub_namespace)" &
+    pids+=($!)
     ;;
   *)
     log "WARN" "Invalid GATHER_CONTEXT value: ${GATHER_CONTEXT}"
     ;;
   esac
+  if [ ${#pids[@]} -ne 0 ]; then
+    log "All ACM hub must-gather scripts have started. Waiting on subprocesses to finish execution."
+    wait "${pids[@]}"
+    log "All ACM hub must-gather scripts have completed."
+  fi
 fi
 
 check_if_hub() {
