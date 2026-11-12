@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Copyright (c) 2026 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+# Expect base collection path as an exported variable
+# If it is not defined, use PWD instead
+BASE_COLLECTION_PATH=${BASE_COLLECTION_PATH:-"$(pwd)"}
+[ -z "$DELL_COLLECTION_PATH" ] && DELL_COLLECTION_PATH="${BASE_COLLECTION_PATH}/dell_logs"
+[ -z "$POWERSTORE_NAMESPACE" ] && POWERSTORE_NAMESPACE=powerstore
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+source "${SCRIPT_DIR}/gather_utils"
+
+# if the namespace exists
+if oc get namespace "${POWERSTORE_NAMESPACE}" > /dev/null 2>&1; then
+	log "Namespace ${POWERSTORE_NAMESPACE} found, collecting powerstore logs in ${DELL_COLLECTION_PATH}"
+	mkdir -p "${DELL_COLLECTION_PATH}"
+	oc -n "${POWERSTORE_NAMESPACE}" logs --prefix --all-pods --all-containers deploy/powerstore-controller > "${DELL_COLLECTION_PATH}/deployment.powerstore-controller.log" 2>&1
+	oc -n "${POWERSTORE_NAMESPACE}" logs --prefix --all-pods --all-containers daemonset/powerstore-node > "${DELL_COLLECTION_PATH}/daemonset.powerstore-node.log" 2>&1
+else
+	log "Namespace ${POWERSTORE_NAMESPACE} not found, skipping powerstore logs"
+fi
+
