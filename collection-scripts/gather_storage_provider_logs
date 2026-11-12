@@ -8,9 +8,4 @@ source "${SCRIPT_DIR}/gather_utils"
 
 log "Starting Storage Provider must-gather"
 
-STORAGE_COLLECTION_PATH="${BASE_COLLECTION_PATH}/storage-provider-resources"
-
-# Will only run if the "powerstore" namespace is found
-DELL_COLLECTION_PATH="${STORAGE_COLLECTION_PATH}/powerstore-logs" "${SCRIPT_DIR}/gather_powerstore_logs"
-
-# TODO: Add other storage providers' collection scripts here
+run_inspect "ns/powerstore"
