@@ -47,6 +47,9 @@ if check_if_spoke; then
   pids+=($!)
 fi
 
+"${SCRIPT_DIR}/gather_storage_provider_logs" &
+pids+=($!)
+
 dump_hostedcluster &
 pids+=($!)
 

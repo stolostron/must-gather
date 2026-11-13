@@ -1,0 +1,11 @@
+#! /bin/bash
+# Copyright (c) 2026 Red Hat, Inc.
+# Copyright Contributors to the Open Cluster Management project
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=collection-scripts/gather_utils
+source "${SCRIPT_DIR}/gather_utils"
+
+log "Starting Storage Provider must-gather"
+
+run_inspect "ns/powerstore"
