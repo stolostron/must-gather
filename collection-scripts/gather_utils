@@ -55,14 +55,9 @@ check_if_hub() {
 
 check_if_acm_spoke() {
   log "Detecting ACM Managed cluster by fetching Policy CRD..."
-  if output=$(oc get crd policies.policy.open-cluster-management.io 2>&1) && [[ -n "${output}" ]]; then
+  if detect_kind crd/policies.policy.open-cluster-management.io; then
     log "The current cluster has policies.policy.open-cluster-management.io CRD, it is an ACM spoke cluster."
     return 0
-  fi
-
-  if [[ -n "${output}" ]]; then
-    log "$(printf 'The current cluster does not have policies.policy.open-cluster-management.io CRD, it is not an ACM spoke cluster:\n\t\t%s' "${output}")"
-    return 1
   fi
 
   log "The current cluster does not have policies.policy.open-cluster-management.io CRD, it is not an ACM spoke cluster."
@@ -71,14 +66,9 @@ check_if_acm_spoke() {
 
 check_if_obs_hub() {
   log "Checking if Observability is enabled by fetching MCO resource..."
-  if output=$(oc get multiclusterobservabilities.observability.open-cluster-management.io --all-namespaces -o jsonpath='{.items[*].metadata.name}' 2>&1) && [[ -n "${output}" ]]; then
+  if detect_kind multiclusterobservabilities.observability.open-cluster-management.io; then
     log "Detected MCO resource. Observability is enabled."
     return 0
-  fi
-
-  if [[ -n "${output}" ]]; then
-    log "$(printf "No MCO resource detected on the current cluster. Observability is not enabled:\n\t\t%s" "${output}")"
-    return 1
   fi
 
   log "No MCO resource detected on the current cluster. Observability is not enabled."
@@ -87,14 +77,9 @@ check_if_obs_hub() {
 
 check_if_globalhub() {
   log "Checking if GlobalHub is enabled by fetching MultiClusterGlobalHub resource..."
-  if output=$(oc get multiclusterglobalhubs.operator.open-cluster-management.io --all-namespaces -o jsonpath='{.items[*].metadata.name}' 2>&1) && [[ -n "${output}" ]]; then
+  if detect_kind multiclusterglobalhubs.operator.open-cluster-management.io; then
     log "Detected MultiClusterGlobalHub resource. GlobalHub is enabled."
     return 0
-  fi
-
-  if [[ -n "${output}" ]]; then
-    log "$(printf "No MultiClusterGlobalHub resource detected on the current cluster. GlobalHub is not enabled:\n\t\t%s" "${output}")"
-    return 1
   fi
 
   log "No MultiClusterGlobalHub resource detected on the current cluster. GlobalHub is not enabled."
