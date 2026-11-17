@@ -41,6 +41,30 @@ run_inspect() {
   oc adm inspect --dest-dir=${BASE_COLLECTION_PATH} "$@"
 }
 
+# detect_kind checks if a given kind is both present and non-empty in the cluster.
+detect_kind() {
+  local kind output err rc errfile
+  kind="${1}"
+  errfile=$(mktemp)
+
+  output=$(oc get "${kind}" --all-namespaces -o=name 2>"${errfile}")
+  rc=$?
+  err=$(<"${errfile}")
+  rm -f "${errfile}"
+
+  if [[ ${rc} == 0 ]] && [[ -n ${output} ]]; then
+    return 0
+  fi
+
+  if [[ ${rc} == 0 ]]; then
+    log "No ${kind} found."
+  else
+    log "Failed to fetch ${kind}: ${err}"
+  fi
+
+  return 1
+}
+
 # Each potentially sensitive kind and "wrapper" kind should have an entry in this definition.
 # Using a jq `def` ensures that this can recursively descend through multiple "wrapper" kinds.
 # Separating each kind into a separate `def` would cause problems with how `jq` parses this.
